@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8">
+<title>메인페이지</title>
+</head>
+<body>
+	<a sec:authorize="isAnonymous()" href="/sign/login">로그인</a>
+	<span></span>
+	<a sec:authorize="isAuthenticated()" href="/logout">로그아웃</a>
+</body>
+</html>

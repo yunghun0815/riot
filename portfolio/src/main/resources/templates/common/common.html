@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:fragment="head">
+<meta charset="UTF-8">
+<title>header</title>
+<link rel="stylesheet" type="text/css" href="/css/common/common.css">
+</head>
+<body>
+	<header th:fragment="header">
+		<!-- 상단 헤더 -->
+		<section class="flex first-header">
+			<div class="flex header-banner">
+				<a href="/">
+					<img src="/images/op.gg.svg"><!-- 배너 -->
+				</a>
+				<div>
+					<img src="/images/lolo.svg"><!-- 롤 이미지 -->
+					<span>리그오브레전드</span>
+				</div>	
+			</div>
+			<div class="header-login">
+				<button onclick="location.href='/sign/login'" sec:authorize="isAnonymous()">로그인</button>
+				<button onclick="location.href='/logout'" sec:authorize="isAuthenticated()">로그아웃</button>
+			</div>
+		</section>
+		<!-- 하단 헤더  -->
+		<section>
+			<div class="flex">
+				<ul class="flex">
+					<li>
+						<a href="/">#홈</a>
+					</li>
+					<li>
+						<a href="#">챔피언 분석</a>
+					</li>
+					<li>
+						<a href="#">랭킹</a>
+					</li>
+					<li>
+						<a href="#">커뮤니티</a>
+					</li>
+				</ul>
+			</div>
+		</section>
+	</header> 
+	<main>
+		<section>
+			<div>
+				<form action="/search" method="get">
+					<input type="text" name="name" placeholder="소환사명">
+					<button type="submit">검색</button>
+				</form>
+			</div>
+		</section>
+		<section>
+			<div>
+				<!-- 인기글 ajax -->
+			</div>
+		</section>
+	</main>
+	<footer th:fragment="footer">
+		<section class="view-size">
+			<div>
+				<ul class="flex">
+					<li>
+						<a href="#">About OP.GG</a>
+					</li>
+					<li>
+						<a href="#">로고 히스토리</a>
+					</li>
+					<li>
+						<a href="#">개인정보처리방침</a>
+					</li>
+					<li>
+						<a href="#">도움말</a>
+					</li>
+					<li>
+						<a href="#">제휴</a>
+					</li>
+					<li>
+						<a href="#">광고</a>
+					</li>
+					<li>
+						<a href="#">문의/피드백</a>
+					</li>
+					<li>
+						<a href="#">채용</a>
+					</li>
+				</ul>
+			</div>
+			<div>
+				<span>
+					© 2012-2021 OP.GG. OP.GG isn’t endorsed by Riot Games and doesn’t reflect the views or opinions of Riot Games or anyone officially involved in producing or managing League of Legends.
+				</span> 
+				<span>
+					League of Legends and Riot Games are trademarks or registered trademarks of Riot Games, Inc. League of Legends © Riot Games, Inc.
+				</span>
+			</div>
+		</section>
+	</footer>
+</body>
+</html>

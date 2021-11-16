@@ -29,10 +29,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter{
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
-		http.authorizeRequests().antMatchers("/", "/sign/**").permitAll().anyRequest().authenticated();
+		http.authorizeRequests().antMatchers("/", "/sign/**","/common/**").permitAll().anyRequest().authenticated();
 		
 		http.formLogin().usernameParameter("userId").passwordParameter("password")
-		.loginPage("/sign/login").loginProcessingUrl("/login").failureUrl("/login-error");
+		.loginPage("/sign/login").loginProcessingUrl("/login");
 		
 		http.logout().logoutSuccessUrl("/");
 		http.csrf().disable();

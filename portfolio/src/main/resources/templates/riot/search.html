@@ -1,10 +1,58 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html xmlns:th= "http://www.thymeleaf.org">
+<head th:insert="/common/common::head">
 <meta charset="UTF-8">
 <title>user - 게임 전적</title>
 </head>
 <body>
-	<span>전적 검색 결과</span>
+	<th:block th:insert="/common/common::header"></th:block>
+	<span>전적 검색 결과</span><br>
+	<div>
+		<ul th:if="${code} == 'solo' or ${code} == 2" class="flex">
+			<li>
+				<img th:src="'/images/tier/'+${tier_solo}+'.png'" style="width: 50px; height: 50px;">
+			</li>
+			<li>
+				<span>솔로랭크</span><br>
+				<span th:text="${tier_solo}"></span><br>
+				<span th:text="${leaguePoints_solo} + 'LP'"></span>
+				<span th:text="'/' + ${wins_solo} + '승'" ></span>
+				<span th:text="${losses_solo} + '패'"></span><br>
+				<span th:text="'승률 ' + ${percent_solo} + '%'"></span>
+			</li>
+		</ul>
+		<ul th:unless= "${code} == 'solo' or ${code} == 2" class="flex">
+			<li>
+				<img src="/images/tier/UNRANKED.png" style="width: 50px; height: 50px;">>
+			</li>
+			<li>
+				<span>솔로랭크</span><br>
+				<span>Unranked</span>
+			</li>
+		</ul>
+		<ul th:if="${code} == 'free' or ${code} == 2" class="flex">
+			<li>
+				<img th:src="'/images/tier/'+${tier_free}+'.png'" style="width: 50px; height: 50px;">
+			</li>
+			<li>
+				<span>자유 5:5 랭크</span><br>
+				<span th:text="${tier_free}"></span><br>
+				<span th:text="${leaguePoints_free} + 'LP'"></span>
+				<span th:text="'/' + ${wins_free} + '승'" ></span>
+				<span th:text="${losses_free} + '패'"></span><br>
+				<span th:text="'승률 ' + ${percent_free} + '%'"></span>
+			</li>
+		</ul>
+		<ul th:unless= "${code} == 'free' or ${code} == 2" class="flex">
+			<li>
+				<img src="/images/tier/UNRANKED.png" style="width: 50px; height: 50px;">
+			</li>
+			<li>
+				<span>자유 5:5 랭크</span><br>
+				<span>Unranked</span>
+			</li>
+		</ul>
+	</div>
+	<th:block th:insert="/common/common::footer"></th:block>
 </body>
 </html>

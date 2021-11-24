@@ -7,6 +7,12 @@
 <body>
 	<th:block th:insert="/common/common::header"></th:block>
 	<span>전적 검색 결과</span><br>
+	<!-- 소환사 정보  -->
+	<div>
+		<span th:text ="${name}"></span>
+		<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.20.1/img/profileicon/' + ${profileIconId}+'png'">
+	</div>
+	<!-- 티어, 점수, 승률 -->
 	<div>
 		<ul th:if="${code} == 'solo' or ${code} == 2" class="flex">
 			<li>
@@ -52,6 +58,8 @@
 				<span>Unranked</span>
 			</li>
 		</ul>
+	</div>
+	<div>
 	</div>
 	<th:block th:insert="/common/common::footer"></th:block>
 </body>

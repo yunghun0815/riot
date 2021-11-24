@@ -36,6 +36,7 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 	implementation group: 'org.apache.clerezza.ext', name: 'org.json.simple', version: '0.4'
+	//implementation group: 'org.apache.camel', name: 'camel-jslt', version: '3.1.0'
 }
 
 test {

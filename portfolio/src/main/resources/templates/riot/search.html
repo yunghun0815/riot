@@ -59,8 +59,15 @@
 			</li>
 		</ul>
 	</div>
-	<div>
+	<!-- 게임결과 -->
+	<div th:each="first : ${test}">
+		<span th:text="${first[0].summonerName}"></span>
+		<span th:text="${first[1].summonerName}"></span>
+		<span th:text="${first[2].summonerName}"></span>
+		<span th:text="${first[3].summonerName}"></span>
+		<span th:text="${first[4].summonerName}"></span>
 	</div>
+	
 	<th:block th:insert="/common/common::footer"></th:block>
 </body>
 </html>

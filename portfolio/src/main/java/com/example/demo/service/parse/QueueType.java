@@ -1,11 +1,11 @@
 package com.example.demo.service.parse;
 
 public class QueueType {
-	public String queue(int num) {
+	public String queue(long num) {
 		//큐타입 참조
 		//https://static.developer.riotgames.com/docs/lol/queues.json 
 		String queue = null;
-		switch (num) {
+		switch ((int) num) {
 			case 400: case 430:
 				queue = "일반게임";
 				break;

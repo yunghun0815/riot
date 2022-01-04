@@ -3,7 +3,8 @@
 <head th:fragment="head">
 <meta charset="UTF-8">
 <title>header</title>
-<link rel="stylesheet" type="text/css" href="/css/common/common.css">
+	<link rel="stylesheet" type="text/css" href="/css/common/common.css">
+	<link rel="stylesheet" type="text/css" href="/css/common/search.css">
 </head>
 <body>
 	<header th:fragment="header">
@@ -11,38 +12,28 @@
 		<section class="flex first-header">
 			<div class="flex header-banner">
 				<a href="/">
-					<img src="/images/op.gg.svg"><!-- 배너 -->
+					<img src="/images/yh.png"><!-- 배너 -->
 				</a>
-				<div>
-					<img src="/images/lolo.svg"><!-- 롤 이미지 -->
-					<span>리그오브레전드</span>
-				</div>	
 			</div>
 			<div class="header-login">
-				<button onclick="location.href='/sign/login'" sec:authorize="isAnonymous()">로그인</button>
-				<button onclick="location.href='/logout'" sec:authorize="isAuthenticated()">로그아웃</button>
+				<div class="flex menu">
+					<ul class="flex">
+						<li>
+							<a href="#">챔피언 분석</a>
+						</li>
+						<li>
+							<a href="#">랭킹</a>
+						</li>
+						<li>
+							<a href="#">커뮤니티</a>
+						</li>
+					</ul>
+					<button onclick="location.href='/sign/login'" sec:authorize="isAnonymous()">로그인</button>
+					<button onclick="location.href='/logout'" sec:authorize="isAuthenticated()">로그아웃</button>
+				</div>
 			</div>
 		</section>
-		<!-- 하단 헤더  -->
-		<section>
-			<div class="flex">
-				<ul class="flex">
-					<li>
-						<a href="/">#홈</a>
-					</li>
-					<li>
-						<a href="#">챔피언 분석</a>
-					</li>
-					<li>
-						<a href="#">랭킹</a>
-					</li>
-					<li>
-						<a href="#">커뮤니티</a>
-					</li>
-				</ul>
-			</div>
-		</section>
-	</header> 
+	</header>
 	<main>
 		<section>
 			<div>

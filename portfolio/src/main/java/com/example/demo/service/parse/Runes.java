@@ -20,7 +20,7 @@ public class Runes {
 	public Map<String, String> runes(long main, long mainFirst, long sub) throws Exception{
 		Map<String, String> result = new LinkedHashMap<String, String>();
 		StringBuilder urlBuilder = new StringBuilder(
-				"https://ddragon.leagueoflegends.com/cdn/10.6.1/data/en_US/runesReforged.json");
+				"https://ddragon.leagueoflegends.com/cdn/11.24.1/data/en_US/runesReforged.json");
 		URL url = new URL(urlBuilder.toString());
 		HttpURLConnection con = (HttpURLConnection) url.openConnection();
 		con.setRequestMethod("GET");

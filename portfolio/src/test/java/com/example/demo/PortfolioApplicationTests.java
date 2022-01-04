@@ -17,7 +17,7 @@ class PortfolioApplicationTests {
 	@Autowired
 	PasswordEncoder passwordEncoder;
 	
-	//@Test
+	@Test
 	void contextLoads() {
 		Member member = Member.builder()
 				.userId("admin")

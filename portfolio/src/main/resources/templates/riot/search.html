@@ -4,70 +4,134 @@
 <meta charset="UTF-8">
 <title>user - 게임 전적</title>
 </head>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <body>
 	<th:block th:insert="/common/common::header"></th:block>
-	<span>전적 검색 결과</span><br>
 	<!-- 소환사 정보  -->
-	<div>
-		<span th:text ="${name}"></span>
-		<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.20.1/img/profileicon/' + ${profileIconId}+'png'">
-	</div>
-	<!-- 티어, 점수, 승률 -->
-	<div>
-		<ul th:if="${code} == 'solo' or ${code} == 2" class="flex">
-			<li>
-				<img th:src="'/images/tier/'+${tier_solo}+'.png'" style="width: 50px; height: 50px;">
-			</li>
-			<li>
-				<span>솔로랭크</span><br>
-				<span th:text="${tier_solo}"></span><br>
-				<span th:text="${leaguePoints_solo} + 'LP'"></span>
-				<span th:text="'/' + ${wins_solo} + '승'" ></span>
-				<span th:text="${losses_solo} + '패'"></span><br>
-				<span th:text="'승률 ' + ${percent_solo} + '%'"></span>
-			</li>
-		</ul>
-		<ul th:unless= "${code} == 'solo' or ${code} == 2" class="flex">
-			<li>
-				<img src="/images/tier/UNRANKED.png" style="width: 50px; height: 50px;">>
-			</li>
-			<li>
-				<span>솔로랭크</span><br>
-				<span>Unranked</span>
-			</li>
-		</ul>
-		<ul th:if="${code} == 'free' or ${code} == 2" class="flex">
-			<li>
-				<img th:src="'/images/tier/'+${tier_free}+'.png'" style="width: 50px; height: 50px;">
-			</li>
-			<li>
-				<span>자유 5:5 랭크</span><br>
-				<span th:text="${tier_free}"></span><br>
-				<span th:text="${leaguePoints_free} + 'LP'"></span>
-				<span th:text="'/' + ${wins_free} + '승'" ></span>
-				<span th:text="${losses_free} + '패'"></span><br>
-				<span th:text="'승률 ' + ${percent_free} + '%'"></span>
-			</li>
-		</ul>
-		<ul th:unless= "${code} == 'free' or ${code} == 2" class="flex">
-			<li>
-				<img src="/images/tier/UNRANKED.png" style="width: 50px; height: 50px;">
-			</li>
-			<li>
-				<span>자유 5:5 랭크</span><br>
-				<span>Unranked</span>
-			</li>
-		</ul>
-	</div>
+	<section class="summonerInfo">
+		<div style="margin-right: 30px; width:400px;">
+			<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.20.1/img/profileicon/' + ${profileIconId}+'.png'" style="height: 120px; border-radius: 15px; margin-right: 10px">
+			<div>
+				<span th:text="'Lv.'+${summonerLevel}" style="font-size: 20px;"></span><br>
+				<span th:text ="${name}" style="font-weight: 900; font-size: 30px"></span>
+			</div>
+		</div>
+		<!-- 티어, 점수, 승률 -->
+		<div>
+			<ul th:if="${code} == 'solo' or ${code} == 2" class="inline-flex">
+				<li>
+					<img th:src="'/images/tier/'+${tier_solo}+'.png'">
+				</li>
+				<li class="rankDetail">
+					<span class="type">솔로랭크</span><br>
+					<span th:text="${tier_solo}" class="tier"></span><span th:text="'  '+${rank_solo}" class="tier"></span><br>
+					<span th:text="${leaguePoints_solo} + ' LP'" class="point"></span>
+					<span th:text="'/ ' + ${wins_solo} + '승'" class="type"></span>
+					<span th:text="${losses_solo} + '패'" class="type"></span><br>
+					<span th:text="'승률 ' + ${percent_solo} + '%'" class="type"></span>
+				</li>
+			</ul>
+			<ul th:unless= "${code} == 'solo' or ${code} == 2" class="inline-flex">
+				<li>
+					<img src="/images/tier/UNRANKED.png">
+				</li>
+				<li class="rankDetail">
+					<span class="type">솔로랭크</span><br>
+					<span>Unranked</span>
+				</li>
+			</ul>
+			<ul th:if="${code} == 'free' or ${code} == 2" class="inline-flex">
+				<li>
+					<img th:src="'/images/tier/'+${tier_free}+'.png'">
+				</li>
+				<li class="rankDetail">
+					<span class="type">자유 5:5 랭크</span><br>
+					<span th:text="${tier_free}" class="tier"></span><span th:text="'  '+${rank_free}" class="tier"	></span><br>
+					<span th:text="${leaguePoints_free} + ' LP'" class="point"></span>
+					<span th:text="'/ ' + ${wins_free} + '승'" class="type" ></span>
+					<span th:text="${losses_free} + '패'" class="type"></span><br>
+					<span th:text="'승률 ' + ${percent_free} + '%'" class="type"></span>
+				</li>
+			</ul>
+			<ul th:unless= "${code} == 'free' or ${code} == 2" class="inline-flex">
+				<li>
+					<img src="/images/tier/UNRANKED.png">
+				</li>
+				<li class="rankDetail">
+					<span class="type">자유 5:5 랭크</span><br>
+					<span>Unranked</span>
+				</li>
+			</ul>
+		</div>
+	</section>
 	<!-- 게임결과 -->
-	<div th:each="first : ${test}">
-		<span th:text="${first[0].summonerName}"></span>
-		<span th:text="${first[1].summonerName}"></span>
-		<span th:text="${first[2].summonerName}"></span>
-		<span th:text="${first[3].summonerName}"></span>
-		<span th:text="${first[4].summonerName}"></span>
+	<div th:each="result : ${result}">
+		<ul> <!--게임타입-->
+			<li th:if="${result.win} == true">승리</li>
+			<li th:if="${result.win} == false">패배</li>
+			<li th:text="${result.gameDuration}"></li>
+			<li th:text="${result.queueId}"></li>
+			<li th:text="${result.getEndTimestamp}"></li>
+		</ul>
+		<ul>
+			<li>
+				<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/'+${result.championName}+'.png'">
+			</li>
+			<li>
+				<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/'+${result.summoner1Id}">
+				<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/'+${result.summoner2Id}">
+			</li>
+			<li>
+				<img th:src="'https://ddragon.leagueoflegends.com/cdn/img/'+${result.mainRune}">
+				<img th:src="'https://ddragon.leagueoflegends.com/cdn/img/'+${result.subRune}">
+			</li>
+		</ul>
+		<ul>
+			<li>
+				<span th:text="${result.kills}+' / '"></span>
+				<span th:text="${result.deaths}+' / '"></span>
+				<span th:text="${result.assists}"></span>
+				<span th:text="'평점 '+${result.average}"></span>
+			</li>
+		</ul>
+		<ul>
+			<li th:text="'레벨'+${result.champLevel}"></li>
+			<li>
+				<span th:text="${result.totalMinionsKilled}+${result.neutralMinionsKilled}"></span>
+				<span th:text="' '+${result.mincs}+' '"></span>
+				<span>CS</span>
+			</li>
+			<li th:text="'골드 '+${result.goldEarned}"></li>
+			<li th:text="'제어와드 '+${result.visionWardsBoughtInGame}"></li>
+			<li th:text="${result.killPercent}"></li>
+		</ul>
+		<ul class="item-image">
+			<li>
+				<div>
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item0}+'.png'" th:onerror="this.style.display='none';">
+				</div>
+				<div>
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item1}+'.png'" th:onerror="this.style.display='none';">
+				</div>
+				<div>
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item2}+'.png'" th:onerror="this.style.display='none';">
+				</div>
+				<div>
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item3}+'.png'" th:onerror="this.style.display='none';">
+				</div>
+				<div>
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item4}+'.png'" th:onerror="this.style.display='none';">
+				</div>
+				<div>
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item5}+'.png'" th:onerror="this.style.display='none';">
+				</div>
+				<div>
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item6}+'.png'" th:onerror="this.style.display='none';"
+				</div>
+			</li>
+		</ul>
+		<!--<span th:text="${result}"></span>-->
 	</div>
-	
 	<th:block th:insert="/common/common::footer"></th:block>
 </body>
 </html>

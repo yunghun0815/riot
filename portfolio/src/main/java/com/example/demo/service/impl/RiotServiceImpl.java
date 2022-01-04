@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.example.demo.service.parse.*;
 import org.hibernate.internal.build.AllowSysOut;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -19,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 
 import com.example.demo.service.RiotService;
-import com.example.demo.service.parse.Runes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -27,11 +27,12 @@ import antlr.debug.ParserMatchListener;
 
 @Service
 public class RiotServiceImpl implements RiotService {
-	String api_key = "RGAPI-a14afe11-4fd7-4a0b-99e2-b1bb93c2cbe9";
+	String api_key = "RGAPI-469f9299-cf01-48c6-9f18-7e4b4798f8c3";
 	public void search(String name, Model model) {
-		String api_key = "RGAPI-a14afe11-4fd7-4a0b-99e2-b1bb93c2cbe9";
+		String api_key = "RGAPI-469f9299-cf01-48c6-9f18-7e4b4798f8c3";
 		String id = null;
 		String puuid = null;
+		String summonerName = null;
 		// 소환사 정보 검색
 		try {
 			StringBuilder urlBuilder = new StringBuilder(
@@ -58,8 +59,12 @@ public class RiotServiceImpl implements RiotService {
 			id = object.get("id").toString(); // 전적 검색 때 사용할 아이디
 			puuid = object.get("puuid").toString();
 			String accountId = object.get("accountId").toString();
-			int profileIconId = (int) object.get("profileIconId");
-			int summonerLevel = (int) object.get("summonerLevel");
+			long profileIconId = (long) object.get("profileIconId");
+			long summonerLevel = (long) object.get("summonerLevel");
+			summonerName = (String) object.get("name");
+			model.addAttribute("name", summonerName);
+			model.addAttribute("profileIconId", profileIconId);
+			model.addAttribute("summonerLevel", summonerLevel);
 		} catch (Exception e) {
 			System.out.println(e);
 		}
@@ -154,7 +159,7 @@ public class RiotServiceImpl implements RiotService {
 		} catch (Exception e) {
 			System.out.println(e);
 		}
-	//	 소환사 puuid로 최근 전적 검색
+	//	 소환사 puuid로 최근 전적(match V5 id값) 검색
 		String[] matchId = null;
 		try {
 			StringBuilder urlBuilder = new StringBuilder(
@@ -177,76 +182,133 @@ public class RiotServiceImpl implements RiotService {
 			}
 			br.close();
 			matchId = response.toString().replace("[","").replace("]", "").replace("\"", "").split(",");
-			System.out.println(matchId[0]);
+
 		} catch (Exception e) {
 			System.out.println(e);
 		}
-	//	List(게임수) Map(블루/퍼플) List Map ? 
-		List<Object> matchList = new ArrayList<>();  // 총 100개의 게임 데이터 저장 
-			for(int i=0; i<matchId.length; i++) {
-			Map<String, Object> teamMap = new HashMap<>(); //레드, 블루로 나눔
-			List<LinkedHashMap<String, Object>> redList = new ArrayList<>(); //레드팀 
-			List<LinkedHashMap<String, Object>> blueList = new ArrayList<>(); //블루팀
-			try {
-				StringBuilder urlBuilder = new StringBuilder(
-						"https://asia.api.riotgames.com/lol/match/v5/matches/" + URLEncoder.encode(matchId[i], "UTF-8")
-								+ "?api_key=" + api_key);
-				URL url = new URL(urlBuilder.toString());
-				HttpURLConnection con = (HttpURLConnection) url.openConnection();
-				con.setRequestMethod("GET");
-				int responseCode = con.getResponseCode();
-				BufferedReader br;
-				if (responseCode == 200) { // 정상 호출
-					br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-				} else { // 에러 발생
-					br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+	//	List(게임수) Map(블루/퍼플) List Map ?
+		List<Map<String, Object>> matchList = new ArrayList<>();  // 총 20개의 게임 데이터 저장
+			for(int i=0; i<10; i++) {
+				System.out.println(matchId[i]);
+				Map<String, Object> teamMap = new HashMap<>(); //레드, 블루로 나눔
+				List<LinkedHashMap<String, Object>> redList = new ArrayList<>(); //레드팀
+				List<LinkedHashMap<String, Object>> blueList = new ArrayList<>(); //블루팀
+				try {
+					StringBuilder urlBuilder = new StringBuilder(
+							"https://asia.api.riotgames.com/lol/match/v5/matches/" + URLEncoder.encode(matchId[i], "UTF-8")
+									+ "?api_key=" + api_key);
+					URL url = new URL(urlBuilder.toString());
+					HttpURLConnection con = (HttpURLConnection) url.openConnection();
+					con.setRequestMethod("GET");
+					int responseCode = con.getResponseCode();
+					BufferedReader br;
+					if (responseCode == 200) { // 정상 호출
+						br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+					} else { // 에러 발생
+						br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+					}
+					String inputLine;
+					StringBuffer response = new StringBuffer();
+					while ((inputLine = br.readLine()) != null) {
+						response.append(inputLine);
+					}
+					br.close();
+
+					JSONParser json = new JSONParser();
+					JSONObject object = (JSONObject) json.parse(response.toString());
+					Map<String, Object> map = new HashMap<>();
+					map = (Map) object.get("info");
+					List<Map<String, Object>> participants = new ArrayList<>();
+					participants = (List<Map<String, Object>>) map.get("participants");
+					Duration duration = new Duration();
+					Runes runes = new Runes();
+					Spell spell = new Spell();
+					TimeStamp time = new TimeStamp();
+					Average aver = new Average();
+					List<Map<String,Object>> blueGame = new ArrayList<>();
+					List<Map<String,Object>> redGame = new ArrayList<>();
+					Map<String, Object> playerData = new LinkedHashMap<>();//플레이어 데이터
+					Map<String, Object> redPlayerData = new LinkedHashMap<>();//플레이어 데이터
+					Map<String, Object> mapp = new LinkedHashMap<>();
+					QueueType queue = new QueueType();
+					long killPercent=0;
+					long myKillAssi=0;
+					for (int j = 0; j < 10; j++) {
+						String playerName = (String) participants.get(j).get("summonerName");
+	//					if(playerName.replaceAll(" ","").equals(name)){
+						if(playerName.equals(summonerName)){
+							if(j<5){
+								for(int k=0; k<5; k++){
+									killPercent+=(long)participants.get(k).get("kills");
+								}
+							}else{
+								for(int k=5; k<10; k++){
+									killPercent+=(long)participants.get(k).get("kills");
+								}
+							}
+							myKillAssi = (long)participants.get(j).get("kills") + (long)participants.get(j).get("assists");
+							Map<String, Object> blue = new LinkedHashMap<>();
+							playerData.put("individualPosition", participants.get(j).get("individualPosition"));
+							playerData.put("win", participants.get(j).get("win"));
+							playerData.put("summoner1Id", spell.spell((Long) participants.get(j).get("summoner1Id")));
+							playerData.put("summoner2Id", spell.spell((Long) participants.get(j).get("summoner2Id")));
+							playerData.put("championName", participants.get(j).get("championName"));
+							playerData.put("summonerName", participants.get(j).get("summonerName"));
+							playerData.put("kills", participants.get(j).get("kills"));
+							playerData.put("deaths", participants.get(j).get("deaths"));
+							playerData.put("assists", participants.get(j).get("assists"));
+							playerData.put("goldEarned", participants.get(j).get("goldEarned"));
+							playerData.put("visionWardsBoughtInGame", participants.get(j).get("visionWardsBoughtInGame"));
+							playerData.put("average", aver.average((long)participants.get(j).get("kills"), (long)participants.get(j).get("deaths"), (long)participants.get(j).get("assists")));
+							playerData.put("totalDamageDealtToChampions", participants.get(j).get("totalDamageDealtToChampions"));
+							playerData.put("wardsPlaced", participants.get(j).get("wardsPlaced"));
+							playerData.put("wardsKilled", participants.get(j).get("wardsKilled"));
+							playerData.put("totalMinionsKilled", participants.get(j).get("totalMinionsKilled"));
+							playerData.put("neutralMinionsKilled", participants.get(j).get("neutralMinionsKilled"));
+							playerData.put("mincs", aver.cs((long)participants.get(j).get("totalMinionsKilled"), (long)participants.get(j).get("neutralMinionsKilled"), (long)map.get("gameDuration")/60));
+							playerData.put("champLevel", participants.get(j).get("champLevel"));
+							playerData.put("item0", participants.get(j).get("item0"));
+							playerData.put("item1", participants.get(j).get("item1"));
+							playerData.put("item2", participants.get(j).get("item2"));
+							playerData.put("item3", participants.get(j).get("item3"));
+							playerData.put("item4", participants.get(j).get("item4"));
+							playerData.put("item5", participants.get(j).get("item5"));
+							playerData.put("item6", participants.get(j).get("item6"));
+							playerData.put("matchId", matchId[i]);
+							Map<String, Object> perks = new HashMap<>();
+							perks = (Map<String, Object>) participants.get(j).get("perks");
+							List<Map<String, Object>> styles = new ArrayList<>();
+							styles = (List<Map<String, Object>>) perks.get("styles");
+							List<Map<String, Object>> selections = new ArrayList<>();
+							selections = (List<Map<String, Object>>) styles.get(0).get("selections");
+							Map<String, String> rune = new LinkedHashMap<>();
+							rune = runes.runes((long) styles.get(0).get("style"), (long) selections.get(0).get("perk"), (long) styles.get(1).get("style"));
+							//System.out.println(runes.runes((long)styles.get(0).get("style"), (long)selections.get(0).get("perk"), (long)styles.get(1).get("style")));
+							playerData.put("mainRune", rune.get("mainRune"));
+							playerData.put("subRune", rune.get("subRune"));
+							break;
+						//	blueGame.add(blue);
+						//	playerData.put("blue", blueGame);
+						}else{
+							System.out.println("이름 에러");
+						}
+					}
+					playerData.put("killPercent", aver.killPer(killPercent, myKillAssi));
+					playerData.put("getEndTimestamp", time.timeStamp((long)map.get("gameStartTimestamp")));
+					playerData.put("queueId", queue.queue((long)map.get("queueId")));
+					playerData.put("gameDuration", duration.duration((long)map.get("gameDuration")));
+
+					matchList.add(playerData);
+			//		matchList.put("red", redPlayerData);
+				} catch (Exception e) {
+					System.out.println(e);
+					//	}
 				}
-				String inputLine;
-				StringBuffer response = new StringBuffer();
-				while ((inputLine = br.readLine()) != null) {
-					response.append(inputLine);
-				}
-				br.close();
-				JSONParser json = new JSONParser();
-				JSONObject object = (JSONObject) json.parse(response.toString());
-				Map<String, Object> map = new HashMap<>();
-				map = (Map)object.get("info");
-				List<Map<String, Object>> participants = new ArrayList<>();
-				participants = (List<Map<String, Object>>) map.get("participants");
-				Runes runes = new Runes();
-				List<Map<String, Object>> runeImages = new ArrayList<>();
-				List<Map<String, Object>> bluePlayerData = new ArrayList<>();//플레이어 데이터
-				List<Map<String, Object>> redPlayerData = new ArrayList<>();//플레이어 데이터
-//				for(int j=0; j<5; j++) {
-//					bluePlayerData.add(participants.get(j));
-//					Map<String, Object> perks = new HashMap<>();
-//					perks = (Map<String, Object>) participants.get(j).get("perks");
-//					List<Map<String, Object>> styles = new ArrayList<>();
-//					styles = (List<Map<String, Object>>) perks.get("styles");
-//					List<Map<String, Object>> selections = new ArrayList<>();
-//					selections = (List<Map<String, Object>>) styles.get(0).get("selections");
-//					Map<String,String> runesImage = new LinkedHashMap<>();
-//					
-//					//runesImage.put("", runes.runes((long)styles.get(0).get("style"), (long)selections.get(0).get("perk"), (long)styles.get(1).get("style")).get("mainRune"));
-//					//runes.runes((long)styles.get(0).get("style"), (long)selections.get(0).get("perk"), (long)styles.get(1).get("style"));
-//					//System.out.println(runes.runes((long)styles.get(0).get("style"), (long)selections.get(0).get("perk"), (long)styles.get(1).get("style")));
-//				}
-//				matchList.add(bluePlayerData);
-//				for(int j=5; j<10; j++) {
-//					redPlayerData.add(participants.get(j));
-//					Map<String, Object> perks = new HashMap<>();
-//					perks = (Map<String, Object>) participants.get(j).get("perks");
-//					List<Map<String, Object>> styles = new ArrayList<>();
-//					styles = (List<Map<String, Object>>) perks.get("styles");
-//					List<Map<String, Object>> selections = new ArrayList<>();
-//					selections = (List<Map<String, Object>>) styles.get(0).get("selections");
-//				}
-			} catch (Exception e) {
-				System.out.println(e);
-		//	}
-		}
-	}
-			model.addAttribute("test", matchList);
+
+			}
+		model.addAttribute("result", matchList);
+
+	//	System.out.println(matchList);
 }
 		
 //	public static void main(String[] args) {
@@ -312,10 +374,10 @@ public class RiotServiceImpl implements RiotService {
 //				participants = (List<Map<String, Object>>) map.get("participants");
 //				Runes runes = new Runes();
 //				List<Map<String, Object>> runeImages = new ArrayList<>();
-//				List<Map<String, Object>> bluePlayerData = new ArrayList<>();//플레이어 데이터
+//				List<Map<String, Object>> playerData = new ArrayList<>();//플레이어 데이터
 //				List<Map<String, Object>> redPlayerData = new ArrayList<>();//플레이어 데이터
 //				for(int j=0; j<5; j++) {
-//					bluePlayerData.add(participants.get(j));
+//					playerData.add(participants.get(j));
 //					Map<String, Object> perks = new HashMap<>();
 //					perks = (Map<String, Object>) participants.get(j).get("perks");
 //					List<Map<String, Object>> styles = new ArrayList<>();
@@ -329,7 +391,7 @@ public class RiotServiceImpl implements RiotService {
 //				//	System.out.println(runes.runes((long)styles.get(0).get("style"), (long)selections.get(0).get("perk"), (long)styles.get(1).get("style")));
 //					
 //				}
-//				matchList.add(bluePlayerData);
+//				matchList.add(playerData);
 //				for(int j=5; j<10; j++) {
 //					redPlayerData.add(participants.get(j));
 //					Map<String, Object> perks = new HashMap<>();
@@ -354,7 +416,7 @@ public class RiotServiceImpl implements RiotService {
 // 주룬 : https://ddragon.leagueoflegends.com/cdn/img/perk-images/Styles/Precision/LegendTenacity/LegendTenacity.png
 // 스펠 : https://ddragon.leagueoflegends.com/cdn/11.20.1/img/spell/SummonerSmite.png
 // 아이콘 :https://ddragon.leagueoflegends.com/cdn/11.20.1/img/profileicon/4027.png
-//아이템 : https://ddragon.leagueoflegends.com/cdn/10.6.1/img/item/3108.png
+//아이템 : https://ddragon.leagueoflegends.com/cdn/11.20.1/img/item/3108.png
 
 
 //널처리

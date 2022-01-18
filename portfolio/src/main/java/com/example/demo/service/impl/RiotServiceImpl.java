@@ -28,11 +28,13 @@ import antlr.debug.ParserMatchListener;
 @Service
 public class RiotServiceImpl implements RiotService {
 	String api_key = "RGAPI-469f9299-cf01-48c6-9f18-7e4b4798f8c3";
+
 	public void search(String name, Model model) {
 		String api_key = "RGAPI-469f9299-cf01-48c6-9f18-7e4b4798f8c3";
 		String id = null;
 		String puuid = null;
 		String summonerName = null;
+		String check = null;
 		// 소환사 정보 검색
 		try {
 			StringBuilder urlBuilder = new StringBuilder(
@@ -56,139 +58,149 @@ public class RiotServiceImpl implements RiotService {
 			br.close();
 			JSONParser json = new JSONParser();
 			JSONObject object = (JSONObject) json.parse(response.toString());
-			id = object.get("id").toString(); // 전적 검색 때 사용할 아이디
-			puuid = object.get("puuid").toString();
-			String accountId = object.get("accountId").toString();
-			long profileIconId = (long) object.get("profileIconId");
-			long summonerLevel = (long) object.get("summonerLevel");
-			summonerName = (String) object.get("name");
-			model.addAttribute("name", summonerName);
-			model.addAttribute("profileIconId", profileIconId);
-			model.addAttribute("summonerLevel", summonerLevel);
+			if (object.size() > 1) {
+				check = "true";
+				id = object.get("id").toString(); // 전적 검색 때 사용할 아이디
+				puuid = object.get("puuid").toString();
+				String accountId = object.get("accountId").toString();
+				long profileIconId = (long) object.get("profileIconId");
+				long summonerLevel = (long) object.get("summonerLevel");
+				summonerName = (String) object.get("name");
+				model.addAttribute("check", check);
+				model.addAttribute("name", summonerName);
+				model.addAttribute("profileIconId", profileIconId);
+				model.addAttribute("summonerLevel", summonerLevel);
+			} else {
+				check = "false";
+				model.addAttribute("check", check);
+				model.addAttribute("name", name);
+				System.out.println("error발생");
+			}
 		} catch (Exception e) {
 			System.out.println(e);
 		}
 
 		// 소환사 아이디로 전적 검색
-		try {
-			StringBuilder urlBuilder = new StringBuilder(
-					"https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/" + URLEncoder.encode(id, "UTF-8")
-							+ "?api_key=" + api_key);
-			URL url = new URL(urlBuilder.toString());
-			HttpURLConnection con = (HttpURLConnection) url.openConnection();
-			con.setRequestMethod("GET");
-			int responseCode = con.getResponseCode();
-			BufferedReader br;
-			if (responseCode == 200) {
-				br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-			} else {
-				br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
-			}
-			String inputLine;
-			StringBuffer response = new StringBuffer();
-			while ((inputLine = br.readLine()) != null) {
-				response.append(inputLine);
-			}
-			JSONParser json = new JSONParser();
-			JSONArray object = (JSONArray) json.parse(response.toString());
-			ObjectMapper objectMapper = new ObjectMapper();
-			int percent;
-			Map<String, Object> map = new HashMap<>();
-			List<Map<String, Object>> list = new ArrayList<>();
-			list = objectMapper.readValue(object.toString(), new TypeReference<List<Map<String, Object>>>() {
-			});
-			switch (object.size()) {
-			case 0:
-				model.addAttribute("code", "0");
-				model.addAttribute("result", "등록되지 않은 소환사입니다. 오타를 확인 후 다시 검색해주세요.");
-				break;
-			case 1:
-				map = list.get(0);
-				if (map.get("queueType").equals("RANKED_FLEX_SR")) {
-					model.addAttribute("code", "free");
-					model.addAttribute("tier_free", (String) map.get("tier"));
-					model.addAttribute("rank_free", (String) map.get("rank"));
-					model.addAttribute("leaguePoints_free", (int) map.get("leaguePoints"));
-					model.addAttribute("wins_free", (int) map.get("wins"));
-					model.addAttribute("losses_free", (int) map.get("losses"));
-					percent = (int) (Double.valueOf(map.get("wins").toString())
-							/ ((int) map.get("wins") + (int) map.get("losses")) * 100);
-					model.addAttribute("percent_free", percent);
-				} else if (map.get("queueType").equals("RANKED_SOLO_5x5")) {
-					model.addAttribute("code", "solo");
-					model.addAttribute("tier_solo", (String) map.get("tier"));
-					model.addAttribute("rank_solo", (String) map.get("rank"));
-					model.addAttribute("leaguePoints_solo", (int) map.get("leaguePoints"));
-					model.addAttribute("wins_solo", (int) map.get("wins"));
-					model.addAttribute("losses_solo", (int) map.get("losses"));
-					percent = (int) (Double.valueOf(map.get("wins").toString())
-							/ ((int) map.get("wins") + (int) map.get("losses")) * 100);
-					model.addAttribute("percent_solo", percent);
+		if (check.equals("true")) {
+			try {
+				StringBuilder urlBuilder = new StringBuilder(
+						"https://kr.api.riotgames.com/lol/league/v4/entries/by-summoner/" + URLEncoder.encode(id, "UTF-8")
+								+ "?api_key=" + api_key);
+				URL url = new URL(urlBuilder.toString());
+				HttpURLConnection con = (HttpURLConnection) url.openConnection();
+				con.setRequestMethod("GET");
+				int responseCode = con.getResponseCode();
+				BufferedReader br;
+				if (responseCode == 200) {
+					br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+				} else {
+					br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
 				}
-				break;
-			case 2:
-				model.addAttribute("code", "2");
-				for (int i = 0; i < 2; i++) {
-					if (list.get(i).get("queueType").toString().equals("RANKED_FLEX_SR")) {
-						model.addAttribute("tier_free", (String) list.get(i).get("tier"));
-						model.addAttribute("rank_free", (String) list.get(i).get("rank"));
-						model.addAttribute("leaguePoints_free", (int) list.get(i).get("leaguePoints"));
-						model.addAttribute("wins_free", (int) list.get(i).get("wins"));
-						model.addAttribute("losses_free", (int) list.get(i).get("losses"));
-						percent = (int) (Double.valueOf(list.get(i).get("wins").toString())
-								/ ((int) list.get(i).get("wins") + (int) list.get(i).get("losses")) * 100);
-						model.addAttribute("percent_free", percent);
-					} else if (list.get(i).get("queueType").toString().equals("RANKED_SOLO_5x5")) {
-						model.addAttribute("tier_solo", (String) list.get(i).get("tier"));
-						model.addAttribute("rank_solo", (String) list.get(i).get("rank"));
-						model.addAttribute("leaguePoints_solo", (int) list.get(i).get("leaguePoints"));
-						model.addAttribute("wins_solo", (int) list.get(i).get("wins"));
-						model.addAttribute("losses_solo", (int) list.get(i).get("losses"));
-						percent = (int) (Double.valueOf(list.get(i).get("wins").toString())
-								/ ((int) list.get(i).get("wins") + (int) list.get(i).get("losses")) * 100);
-						model.addAttribute("percent_solo", percent);
-					}
+				String inputLine;
+				StringBuffer response = new StringBuffer();
+				while ((inputLine = br.readLine()) != null) {
+					response.append(inputLine);
 				}
-				break;
-			default:
-				model.addAttribute("code", "error");
-				model.addAttribute("result", "알 수 없는 오류가 발생했습니다. 잠시 후 다시 검색해주세요");
-				break;
-			}
+				JSONParser json = new JSONParser();
+				JSONArray object = (JSONArray) json.parse(response.toString());
+				ObjectMapper objectMapper = new ObjectMapper();
+				int percent;
+				Map<String, Object> map = new HashMap<>();
+				List<Map<String, Object>> list = new ArrayList<>();
+				list = objectMapper.readValue(object.toString(), new TypeReference<List<Map<String, Object>>>() {
+				});
+				switch (object.size()) {
+					case 0:
+						model.addAttribute("code", "0");
+						model.addAttribute("result", "등록되지 않은 소환사입니다. 오타를 확인 후 다시 검색해주세요.");
+						break;
+					case 1:
+						map = list.get(0);
+						if (map.get("queueType").equals("RANKED_FLEX_SR")) {
+							model.addAttribute("code", "free");
+							model.addAttribute("tier_free", (String) map.get("tier"));
+							model.addAttribute("rank_free", (String) map.get("rank"));
+							model.addAttribute("leaguePoints_free", (int) map.get("leaguePoints"));
+							model.addAttribute("wins_free", (int) map.get("wins"));
+							model.addAttribute("losses_free", (int) map.get("losses"));
+							percent = (int) (Double.valueOf(map.get("wins").toString())
+									/ ((int) map.get("wins") + (int) map.get("losses")) * 100);
+							model.addAttribute("percent_free", percent);
+						} else if (map.get("queueType").equals("RANKED_SOLO_5x5")) {
+							model.addAttribute("code", "solo");
+							model.addAttribute("tier_solo", (String) map.get("tier"));
+							model.addAttribute("rank_solo", (String) map.get("rank"));
+							model.addAttribute("leaguePoints_solo", (int) map.get("leaguePoints"));
+							model.addAttribute("wins_solo", (int) map.get("wins"));
+							model.addAttribute("losses_solo", (int) map.get("losses"));
+							percent = (int) (Double.valueOf(map.get("wins").toString())
+									/ ((int) map.get("wins") + (int) map.get("losses")) * 100);
+							model.addAttribute("percent_solo", percent);
+						}
+						break;
+					case 2:
+						model.addAttribute("code", "2");
+						for (int i = 0; i < 2; i++) {
+							if (list.get(i).get("queueType").toString().equals("RANKED_FLEX_SR")) {
+								model.addAttribute("tier_free", (String) list.get(i).get("tier"));
+								model.addAttribute("rank_free", (String) list.get(i).get("rank"));
+								model.addAttribute("leaguePoints_free", (int) list.get(i).get("leaguePoints"));
+								model.addAttribute("wins_free", (int) list.get(i).get("wins"));
+								model.addAttribute("losses_free", (int) list.get(i).get("losses"));
+								percent = (int) (Double.valueOf(list.get(i).get("wins").toString())
+										/ ((int) list.get(i).get("wins") + (int) list.get(i).get("losses")) * 100);
+								model.addAttribute("percent_free", percent);
+							} else if (list.get(i).get("queueType").toString().equals("RANKED_SOLO_5x5")) {
+								model.addAttribute("tier_solo", (String) list.get(i).get("tier"));
+								model.addAttribute("rank_solo", (String) list.get(i).get("rank"));
+								model.addAttribute("leaguePoints_solo", (int) list.get(i).get("leaguePoints"));
+								model.addAttribute("wins_solo", (int) list.get(i).get("wins"));
+								model.addAttribute("losses_solo", (int) list.get(i).get("losses"));
+								percent = (int) (Double.valueOf(list.get(i).get("wins").toString())
+										/ ((int) list.get(i).get("wins") + (int) list.get(i).get("losses")) * 100);
+								model.addAttribute("percent_solo", percent);
+							}
+						}
+						break;
+					default:
+						model.addAttribute("code", "error");
+						model.addAttribute("result", "알 수 없는 오류가 발생했습니다. 잠시 후 다시 검색해주세요");
+						break;
+				}
 
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-	//	 소환사 puuid로 최근 전적(match V5 id값) 검색
-		String[] matchId = null;
-		try {
-			StringBuilder urlBuilder = new StringBuilder(
-					"https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/" + URLEncoder.encode(puuid, "UTF-8") + "/ids"
-							+ "?api_key=" + api_key + "&count=" + "20");
-			URL url = new URL(urlBuilder.toString());
-			HttpURLConnection con = (HttpURLConnection) url.openConnection();
-			con.setRequestMethod("GET");
-			int responseCode = con.getResponseCode();
-			BufferedReader br;
-			if (responseCode == 200) { // 정상 호출
-				br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-			} else { // 에러 발생
-				br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+			} catch (Exception e) {
+				System.out.println(e);
 			}
-			String inputLine;
-			StringBuffer response = new StringBuffer();
-			while ((inputLine = br.readLine()) != null) {
-				response.append(inputLine);
-			}
-			br.close();
-			matchId = response.toString().replace("[","").replace("]", "").replace("\"", "").split(",");
+			//	 소환사 puuid로 최근 전적(match V5 id값) 검색
+			String[] matchId = null;
+			try {
+				StringBuilder urlBuilder = new StringBuilder(
+						"https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/" + URLEncoder.encode(puuid, "UTF-8") + "/ids"
+								+ "?api_key=" + api_key + "&count=" + "20");
+				URL url = new URL(urlBuilder.toString());
+				HttpURLConnection con = (HttpURLConnection) url.openConnection();
+				con.setRequestMethod("GET");
+				int responseCode = con.getResponseCode();
+				BufferedReader br;
+				if (responseCode == 200) { // 정상 호출
+					br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+				} else { // 에러 발생
+					br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+				}
+				String inputLine;
+				StringBuffer response = new StringBuffer();
+				while ((inputLine = br.readLine()) != null) {
+					response.append(inputLine);
+				}
+				br.close();
+				matchId = response.toString().replace("[", "").replace("]", "").replace("\"", "").split(",");
 
-		} catch (Exception e) {
-			System.out.println(e);
-		}
-	//	List(게임수) Map(블루/퍼플) List Map ?
-		List<Map<String, Object>> matchList = new ArrayList<>();  // 총 20개의 게임 데이터 저장
-			for(int i=0; i<10; i++) {
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+			//	List(게임수) Map(블루/퍼플) List Map ?
+			List<Map<String, Object>> matchList = new ArrayList<>();  // 총 20개의 게임 데이터 저장
+			for (int i = 0; i < 10; i++) {
 				System.out.println(matchId[i]);
 				Map<String, Object> teamMap = new HashMap<>(); //레드, 블루로 나눔
 				List<LinkedHashMap<String, Object>> redList = new ArrayList<>(); //레드팀
@@ -225,28 +237,28 @@ public class RiotServiceImpl implements RiotService {
 					Spell spell = new Spell();
 					TimeStamp time = new TimeStamp();
 					Average aver = new Average();
-					List<Map<String,Object>> blueGame = new ArrayList<>();
-					List<Map<String,Object>> redGame = new ArrayList<>();
+					List<Map<String, Object>> blueGame = new ArrayList<>();
+					List<Map<String, Object>> redGame = new ArrayList<>();
 					Map<String, Object> playerData = new LinkedHashMap<>();//플레이어 데이터
 					Map<String, Object> redPlayerData = new LinkedHashMap<>();//플레이어 데이터
 					Map<String, Object> mapp = new LinkedHashMap<>();
 					QueueType queue = new QueueType();
-					long killPercent=0;
-					long myKillAssi=0;
+					long killPercent = 0;
+					long myKillAssi = 0;
 					for (int j = 0; j < 10; j++) {
 						String playerName = (String) participants.get(j).get("summonerName");
-	//					if(playerName.replaceAll(" ","").equals(name)){
-						if(playerName.equals(summonerName)){
-							if(j<5){
-								for(int k=0; k<5; k++){
-									killPercent+=(long)participants.get(k).get("kills");
+						//					if(playerName.replaceAll(" ","").equals(name)){
+						if (playerName.equals(summonerName)) {
+							if (j < 5) {
+								for (int k = 0; k < 5; k++) {
+									killPercent += (long) participants.get(k).get("kills");
 								}
-							}else{
-								for(int k=5; k<10; k++){
-									killPercent+=(long)participants.get(k).get("kills");
+							} else {
+								for (int k = 5; k < 10; k++) {
+									killPercent += (long) participants.get(k).get("kills");
 								}
 							}
-							myKillAssi = (long)participants.get(j).get("kills") + (long)participants.get(j).get("assists");
+							myKillAssi = (long) participants.get(j).get("kills") + (long) participants.get(j).get("assists");
 							Map<String, Object> blue = new LinkedHashMap<>();
 							playerData.put("individualPosition", participants.get(j).get("individualPosition"));
 							playerData.put("win", participants.get(j).get("win"));
@@ -259,13 +271,13 @@ public class RiotServiceImpl implements RiotService {
 							playerData.put("assists", participants.get(j).get("assists"));
 							playerData.put("goldEarned", participants.get(j).get("goldEarned"));
 							playerData.put("visionWardsBoughtInGame", participants.get(j).get("visionWardsBoughtInGame"));
-							playerData.put("average", aver.average((long)participants.get(j).get("kills"), (long)participants.get(j).get("deaths"), (long)participants.get(j).get("assists")));
+							playerData.put("average", aver.average((long) participants.get(j).get("kills"), (long) participants.get(j).get("deaths"), (long) participants.get(j).get("assists")));
 							playerData.put("totalDamageDealtToChampions", participants.get(j).get("totalDamageDealtToChampions"));
 							playerData.put("wardsPlaced", participants.get(j).get("wardsPlaced"));
 							playerData.put("wardsKilled", participants.get(j).get("wardsKilled"));
 							playerData.put("totalMinionsKilled", participants.get(j).get("totalMinionsKilled"));
 							playerData.put("neutralMinionsKilled", participants.get(j).get("neutralMinionsKilled"));
-							playerData.put("mincs", aver.cs((long)participants.get(j).get("totalMinionsKilled"), (long)participants.get(j).get("neutralMinionsKilled"), (long)map.get("gameDuration")/60));
+							playerData.put("mincs", aver.cs((long) participants.get(j).get("totalMinionsKilled"), (long) participants.get(j).get("neutralMinionsKilled"), (long) map.get("gameDuration") / 60));
 							playerData.put("champLevel", participants.get(j).get("champLevel"));
 							playerData.put("item0", participants.get(j).get("item0"));
 							playerData.put("item1", participants.get(j).get("item1"));
@@ -287,129 +299,30 @@ public class RiotServiceImpl implements RiotService {
 							playerData.put("mainRune", rune.get("mainRune"));
 							playerData.put("subRune", rune.get("subRune"));
 							break;
-						//	blueGame.add(blue);
-						//	playerData.put("blue", blueGame);
-						}else{
+							//	blueGame.add(blue);
+							//	playerData.put("blue", blueGame);
+						} else {
 							System.out.println("이름 에러");
 						}
 					}
 					playerData.put("killPercent", aver.killPer(killPercent, myKillAssi));
-					playerData.put("getEndTimestamp", time.timeStamp((long)map.get("gameStartTimestamp")));
-					playerData.put("queueId", queue.queue((long)map.get("queueId")));
-					playerData.put("gameDuration", duration.duration((long)map.get("gameDuration")));
+					playerData.put("getEndTimestamp", time.timeStamp((long) map.get("gameStartTimestamp")));
+					playerData.put("queueId", queue.queue((long) map.get("queueId")));
+					playerData.put("gameDuration", duration.duration((long) map.get("gameDuration")));
 
 					matchList.add(playerData);
-			//		matchList.put("red", redPlayerData);
+					//		matchList.put("red", redPlayerData);
 				} catch (Exception e) {
 					System.out.println(e);
 					//	}
 				}
 
 			}
-		model.addAttribute("result", matchList);
-
-	//	System.out.println(matchList);
+			model.addAttribute("result", matchList);
+		}
+		//	System.out.println(matchList);
+	}
 }
-		
-//	public static void main(String[] args) {
-//		String puuid = "HqY8GPxc11kr7mX7z4dWLSHDka2BetteFVvgi4p4xFwS6qUky3102AwFTWJoMdHrZ1gPYynBdUo5eA";
-//		String api_key = "RGAPI-a14afe11-4fd7-4a0b-99e2-b1bb93c2cbe9";
-//		String[] matchId = null;
-//		try {
-//			StringBuilder urlBuilder = new StringBuilder(
-//					"https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/" + URLEncoder.encode(puuid, "UTF-8") + "/ids"
-//							+ "?api_key=" + api_key + "&count=" + "20");
-//			URL url = new URL(urlBuilder.toString());
-//			HttpURLConnection con = (HttpURLConnection) url.openConnection();
-//			con.setRequestMethod("GET");
-//			int responseCode = con.getResponseCode();
-//			BufferedReader br;
-//			if (responseCode == 200) { // 정상 호출
-//				br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-//			} else { // 에러 발생
-//				br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
-//			}
-//			String inputLine;
-//			StringBuffer response = new StringBuffer();
-//			while ((inputLine = br.readLine()) != null) {
-//				response.append(inputLine);
-//			}
-//			br.close();
-//			matchId = response.toString().replace("[","").replace("]", "").replace("\"", "").split(",");
-//			System.out.println(matchId[0]);
-//		} catch (Exception e) {
-//			System.out.println(e);
-//		}
-//		//List(게임수) Map(블루/퍼플) List Map ? 
-//		List<Object> matchList = new ArrayList<>();  // 총 100개의 게임 데이터 저장 
-//			for(int i=0; i<matchId.length; i++) {
-//			Map<String, Object> teamMap = new HashMap<>(); //레드, 블루로 나눔
-//			List<LinkedHashMap<String, Object>> redList = new ArrayList<>(); //레드팀 
-//			List<LinkedHashMap<String, Object>> blueList = new ArrayList<>(); //블루팀
-//			try {
-//				StringBuilder urlBuilder = new StringBuilder(
-//						"https://asia.api.riotgames.com/lol/match/v5/matches/" + URLEncoder.encode(matchId[i], "UTF-8")
-//								+ "?api_key=" + api_key);
-//				URL url = new URL(urlBuilder.toString());
-//				HttpURLConnection con = (HttpURLConnection) url.openConnection();
-//				con.setRequestMethod("GET");
-//				int responseCode = con.getResponseCode();
-//				BufferedReader br;
-//				if (responseCode == 200) { // 정상 호출
-//					br = new BufferedReader(new InputStreamReader(con.getInputStream()));
-//				} else { // 에러 발생
-//					br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
-//				}
-//				String inputLine;
-//				StringBuffer response = new StringBuffer();
-//				while ((inputLine = br.readLine()) != null) {
-//					response.append(inputLine);
-//				}
-//				br.close();
-//				JSONParser json = new JSONParser();
-//				JSONObject object = (JSONObject) json.parse(response.toString());
-//				Map<String, Object> map = new HashMap<>();
-//				map = (Map)object.get("info");
-//				List<Map<String, Object>> participants = new ArrayList<>();
-//				participants = (List<Map<String, Object>>) map.get("participants");
-//				Runes runes = new Runes();
-//				List<Map<String, Object>> runeImages = new ArrayList<>();
-//				List<Map<String, Object>> playerData = new ArrayList<>();//플레이어 데이터
-//				List<Map<String, Object>> redPlayerData = new ArrayList<>();//플레이어 데이터
-//				for(int j=0; j<5; j++) {
-//					playerData.add(participants.get(j));
-//					Map<String, Object> perks = new HashMap<>();
-//					perks = (Map<String, Object>) participants.get(j).get("perks");
-//					List<Map<String, Object>> styles = new ArrayList<>();
-//					styles = (List<Map<String, Object>>) perks.get("styles");
-//					List<Map<String, Object>> selections = new ArrayList<>();
-//					selections = (List<Map<String, Object>>) styles.get(0).get("selections");
-//					Map<String,String> runesImage = new LinkedHashMap<>();
-//					
-//					//runesImage.put("", runes.runes((long)styles.get(0).get("style"), (long)selections.get(0).get("perk"), (long)styles.get(1).get("style")).get("mainRune"));
-//					runes.runes((long)styles.get(0).get("style"), (long)selections.get(0).get("perk"), (long)styles.get(1).get("style"));
-//				//	System.out.println(runes.runes((long)styles.get(0).get("style"), (long)selections.get(0).get("perk"), (long)styles.get(1).get("style")));
-//					
-//				}
-//				matchList.add(playerData);
-//				for(int j=5; j<10; j++) {
-//					redPlayerData.add(participants.get(j));
-//					Map<String, Object> perks = new HashMap<>();
-//					perks = (Map<String, Object>) participants.get(j).get("perks");
-//					List<Map<String, Object>> styles = new ArrayList<>();
-//					styles = (List<Map<String, Object>>) perks.get("styles");
-//					List<Map<String, Object>> selections = new ArrayList<>();
-//					selections = (List<Map<String, Object>>) styles.get(0).get("selections");
-//				}
-//			} catch (Exception e) {
-//				System.out.println(e);
-//		//	}
-//		}
-//	}
-//			System.out.println(matchList);
-//}
-}
-
 //이미지호스팅 
 //1. 챔피언이미지 2.룬이미지 3.스펠이미지 4.소환사아이콘이미지 5.아이템이미지
 //챔피언 : 

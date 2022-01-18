@@ -5,12 +5,260 @@
 <title>user - 게임 전적</title>
 </head>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script>
+	$(function () {
+		var runeData =
+				$.ajax({
+					type: "GET",
+					url: "https://ddragon.leagueoflegends.com/cdn/11.24.1/data/en_US/runesReforged.json",
+					data: {},
+					success: function(data){
+						runeData = data;
+					}
+				});
+		$("#reSearch").click(function(){
+			$("#searchBanner").css("display", "block");
+			$("#reSearch").css("display", "none");
+		});
+		$(".anyinfo").click(function () {
+			var api_key = "RGAPI-469f9299-cf01-48c6-9f18-7e4b4798f8c3";
+			var matchId = $(this).prev().prev().val();
+			var red_header = $(this).next().find(".red-header");
+			var blue_header = $(this).next().find(".blue-header");
+			var red_location = $(this).next().find(".red-container");
+			var blue_location = $(this).next().find(".blue-container");
+			var win_red = $(this).next().find(".red-header>div:first-child");
+			var win_blue = $(this).next().find(".blue-header>div:first-child");
+
+			$(this).hide();
+			$(this).prev().show();
+			$(this).parent().css("margin-bottom", "600px");
+			$(this).next().css("display", "block");
+			$.ajax({
+				type: "GET",
+				url: "https://asia.api.riotgames.com/lol/match/v5/matches/" + matchId + "?api_key=" + api_key,
+				data: {},
+				success: function (data) {
+					var blue_result = data['info']['participants'][0]['win'];
+					var red_result = data['info']['participants'][5]['win'];
+					if(blue_result == true){
+						blue_result = " (승리)";
+						blue_location.css("background-color", "#d8e4ec");
+					}else{
+						blue_result = " (패배)";
+						blue_location.css("background-color", "#e9e0e0");
+					}
+					if(red_result == true){
+						red_result = " (승리)";
+						red_location.css("background-color", "#d8e4ec");
+					}else{
+						red_result = " (패배)";
+						red_location.css("background-color", "#e9e0e0");
+					}
+					let red_span = '<span>' + red_result + '</span>';
+					let blue_span = '<span>' + blue_result + '</span>';
+					win_red.append(red_span);
+					win_blue.append(blue_span);
+					for (let i = 0; i < 5; i++) {
+						blue(data['info']['participants'][i], blue_location);
+					}
+					// let red = '<div>레드팀</div>';
+					// red_location.append(red);
+					for (let j = 5; j < 10; j++) {
+						red(data['info']['participants'][j], red_location);
+					}
+				}
+			})
+		});
+
+		$(".closeinfo").click(function () {
+			$(this).next().show();
+			$(this).hide();
+			$(this).next().next().find(".red-container *").remove();
+			$(this).next().next().find(".red-header span").remove();
+			$(this).next().next().find(".blue-container *").remove();
+			$(this).next().next().find(".blue-header span").remove();
+			$(this).next().next().find(".blue-container *").remove();
+			$(this).next().next().css("display", "none");
+			$(this).parent().css("margin-bottom", "30px");
+		});
+
+		function red(data, location) {
+			var total = data['totalMinionsKilled'];
+			var neutral = data['neutralMinionsKilled'];
+			var minions = parseInt(total) + parseInt(neutral);
+			var spell1 = spell(data['summoner1Id']);
+			var spell2 = spell(data['summoner2Id']);
+			var mainRuneImg = mainRune(data['perks']['styles'][0]['style'], data['perks']['styles'][0]['selections'][0]['perk']);
+			var subRuneImg = subRun(data['perks']['styles'][1]['style']);
+			var championName = data['championName'];
+			let test = '<li class="part">\
+			<div class="cell inline-flex infocell">\
+				<div class="cell-champion" style="margin-right: 10px;">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/'+ championName + '.png">\
+				</div>\
+				<div class="cell-spell" style="margin-right: 5px;">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/' + spell1 + '">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/' + spell2 + '">\
+				</div>\
+				<div class="cell-rune" style="margin-right: 20px;">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/img/' + mainRuneImg + '">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/img/' + subRuneImg + '">\
+				</div>\
+				<div><a href="/search?name=' + data['summonerName'] + '">' + data['summonerName'] + '</a></div>\
+			</div>\
+			<div class="cell">' + data['kills'] + ' / ' + data['deaths'] + ' / ' + data['assists'] + '</div>\
+			<div class="cell">' + data['totalDamageDealtToChampions'] + '</div>\
+			<div class="cell">' + data['visionWardsBoughtInGame'] + '</div>\
+			<div class="cell">' + minions + '</div>\
+			<div class="cell itemcell">\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item0'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item1'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item2'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item3'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item4'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item5'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item6'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				</div></li>'
+			location.append(test);
+		};
+
+		function blue(data, location) {
+			var total = data['totalMinionsKilled'];
+			var neutral = data['neutralMinionsKilled'];
+			var minions = parseInt(total) + parseInt(neutral);
+			var spell1 = spell(data['summoner1Id']);
+			var spell2 = spell(data['summoner2Id']);
+			var mainRuneImg = mainRune(data['perks']['styles'][0]['style'], data['perks']['styles'][0]['selections'][0]['perk']);
+			var subRuneImg = subRun(data['perks']['styles'][1]['style']);
+			var championName = data['championName'];
+			let test = '<li class="part">\
+			<div class="cell inline-flex infocell">\
+				<div class="cell-champion" style="margin-right: 10px;">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/'+ championName + '.png">\
+				</div>\
+				<div class="cell-spell" style="margin-right: 5px;">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/' + spell1 + '">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/' + spell2 + '">\
+				</div>\
+				<div class="cell-rune" style="margin-right: 20px;">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/img/' + mainRuneImg + '">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/img/' + subRuneImg + '">\
+				</div>\
+				<div><a href="/search?name=' + data['summonerName'] + '">' + data['summonerName'] + '</a></div>\
+			</div>\
+			<div class="cell">' + data['kills'] + ' / ' + data['deaths'] + ' / ' + data['assists'] + '</div>\
+			<div class="cell">' + data['totalDamageDealtToChampions'] + '</div>\
+			<div class="cell">' + data['visionWardsBoughtInGame'] + '</div>\
+			<div class="cell">' + minions + '</div>\
+			<div class="cell itemcell">\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item0'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item1'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item2'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item3'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item4'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item5'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				<div class="cell-item"><img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + data['item6'] + '.png" onerror="this.style.display=\'none\';"></div>\
+				</div></li>'
+			location.append(test);
+		}
+
+		function spell(key) {
+			let spell = null;
+			switch (key) {
+				case 1:
+					spell = "SummonerBoost.png"; // 정화
+					break;
+				case 3:
+					spell = "SummonerExhaust.png"; // 탈진
+					break;
+				case 4:
+					spell = "SummonerFlash.png"; // 점멸
+					break;
+				case 6:
+					spell = "SummonerHaste.png"; // 유체화
+					break;
+				case 7:
+					spell = "SummonerHeal.png"; // 회복
+					break;
+				case 11:
+					spell = "SummonerSmite.png"; // 강타
+					break;
+				case 12:
+					spell = "SummonerTeleport.png"; // 순간이동
+					break;
+				case 13:
+					spell = "SummonerMana.png"; // 총명
+					break;
+				case 14:
+					spell = "SummonerDot.png"; // 점화
+					break;
+				case 21:
+					spell = "SummonerBarrier.png"; // 방어막
+					break;
+				case 30:
+					spell = "SummonerPoroRecall.png"; // 포로귀환
+					break;
+				case 31:
+					spell = "SummonerPoroThrow.png"; // 포로던지기
+					break;
+				case 32:
+					spell = "SummonerSnowball.png"; // 눈덩이
+					break;
+				case 39:
+					spell = "SummonerSnowURFSnowball_Mark.png"; // 눈덩이
+					break;
+				default:
+					break;
+			}
+			return spell;
+		}
+
+		function mainRune(main, mainFirst) {
+			var slots = null;
+			let mainImg = null;
+			for (var i = 0; i < runeData.length; i++) {
+				if (runeData[i]['id'] == main) {
+					slots = runeData[i]['slots'];
+				}
+			}
+			for (var j = 0; j < slots[0]['runes'].length; j++) {
+				if (slots[0]['runes'][j]['id'] == mainFirst) {
+					mainImg = slots[0]['runes'][j]['icon'];
+					return mainImg;
+				}
+			}
+		}
+
+		function subRun(sub) {
+			for (var i = 0; i < runeData.length; i++) {
+				if (runeData[i]['id'] == sub) {
+					return (runeData[i]['icon']);
+				}
+			}
+		}
+	});
+</script>
 <body>
 	<th:block th:insert="/common/common::header"></th:block>
+	<div id="reSearch" style="width: 200px; margin: 50px auto;">
+		<h3 style="cursor: pointer">다른 아이디 검색</h3>
+	</div>
+	<div id="searchBanner" style="width: 200px; margin: 50px auto; display: none;">
+		<form action="/search" method="get">
+			<input type="text" name="name" placeholder="소환사명을 입력해주세요" style="width: 160px; border-radius: 1px; height: 25px; padding: 5px;">
+			<input type="submit" value="🔍"
+				   style="cursor : pointer; background-color: inherit; margin-right: 10px; border: none; position: relative; right: 23px;"></input>
+		</form>
+	</div>
 	<!-- 소환사 정보  -->
-	<section class="summonerInfo">
+	<section class="check-false" th:if="${check} == 'false'">
+		<span>해당하는 소환사를 찾을 수 없습니다.</span><br><br>
+		<span>다시 검색해주세요.</span>
+	</section>
+	<section class="summonerInfo" th:if="${check} == 'true'">
 		<div style="margin-right: 30px; width:400px;">
-			<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.20.1/img/profileicon/' + ${profileIconId}+'.png'" style="height: 120px; border-radius: 15px; margin-right: 10px">
+			<img th:src="'https://ddragon.leagueoflegends.com/cdn/12.1.1/img/profileicon/' + ${profileIconId}+'.png'" style="height: 120px; border-radius: 15px; margin-right: 10px">
 			<div>
 				<span th:text="'Lv.'+${summonerLevel}" style="font-size: 20px;"></span><br>
 				<span th:text ="${name}" style="font-weight: 900; font-size: 30px"></span>
@@ -65,73 +313,106 @@
 		</div>
 	</section>
 	<!-- 게임결과 -->
-	<div th:each="result : ${result}">
-		<ul> <!--게임타입-->
-			<li th:if="${result.win} == true">승리</li>
-			<li th:if="${result.win} == false">패배</li>
-			<li th:text="${result.gameDuration}"></li>
-			<li th:text="${result.queueId}"></li>
-			<li th:text="${result.getEndTimestamp}"></li>
-		</ul>
-		<ul>
-			<li>
-				<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/'+${result.championName}+'.png'">
-			</li>
-			<li>
-				<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/'+${result.summoner1Id}">
-				<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/'+${result.summoner2Id}">
-			</li>
-			<li>
-				<img th:src="'https://ddragon.leagueoflegends.com/cdn/img/'+${result.mainRune}">
-				<img th:src="'https://ddragon.leagueoflegends.com/cdn/img/'+${result.subRune}">
-			</li>
-		</ul>
-		<ul>
-			<li>
-				<span th:text="${result.kills}+' / '"></span>
-				<span th:text="${result.deaths}+' / '"></span>
-				<span th:text="${result.assists}"></span>
-				<span th:text="'평점 '+${result.average}"></span>
-			</li>
-		</ul>
-		<ul>
-			<li th:text="'레벨'+${result.champLevel}"></li>
-			<li>
-				<span th:text="${result.totalMinionsKilled}+${result.neutralMinionsKilled}"></span>
-				<span th:text="' '+${result.mincs}+' '"></span>
-				<span>CS</span>
-			</li>
-			<li th:text="'골드 '+${result.goldEarned}"></li>
-			<li th:text="'제어와드 '+${result.visionWardsBoughtInGame}"></li>
-			<li th:text="${result.killPercent}"></li>
-		</ul>
-		<ul class="item-image">
-			<li>
-				<div>
-					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item0}+'.png'" th:onerror="this.style.display='none';">
+	<section class="gameDetail" th:if="${check} == 'true'">
+		<div th:each="result : ${result}"  th:style="${result.win == true ? 'background-color : #22c4d560' : 'background-color : #e5133c40'}">
+			<ul class="gameType"> <!--게임타입-->
+				<li th:text="${result.queueId}" style="font-weight: bold;"></li>
+				<li th:text="${result.getEndTimestamp}" style="color:#555; margin-bottom: 5px;"></li>
+				<li th:if="${result.win} == true" style="color: #1a78ae;">승리</li>
+				<li th:if="${result.win} == false" style="color: #c6443e;">패배</li>
+				<li th:text="${result.gameDuration}" style="color:#555;"></li>
+			</ul>
+			<ul class="inline-flex imageInfo">
+				<li class="champion">
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/'+${result.championName}+'.png'">
+				</li>
+				<li class="spell">
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/'+${result.summoner1Id}">
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/'+${result.summoner2Id}">
+				</li>
+				<li class="rune">
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/img/'+${result.mainRune}" style="background-color: black; border-radius: 20px;">
+					<img th:src="'https://ddragon.leagueoflegends.com/cdn/img/'+${result.subRune}">
+				</li>
+			</ul>
+			<ul class="kda">
+				<li>
+					<span th:text="${result.kills}" style="font-weight: 700;"></span>
+					<span> / </span>
+					<span th:text="${result.deaths}" style="color: #c6443e; font-weight: 700;"></span>
+					<span> / </span>
+					<span th:text="${result.assists}" style="font-weight: 700;"></span><br>
+					<span class="aver" th:text="'평점 '+${result.average}"></span>
+				</li>
+			</ul>
+			<ul style="color:#555e5e; font-size: 18px;">
+				<li th:text="'레벨'+${result.champLevel}" style="margin-bottom: 7px;"></li>
+				<li style="margin-bottom: 7px;">
+					<span th:text="${result.totalMinionsKilled}+${result.neutralMinionsKilled}"></span>
+					<span th:text="' '+${result.mincs}+' '"></span>
+					<span>CS</span>
+				</li>
+				<li th:text="'킬관여 '+${result.killPercent}" style="color: #c6443e; font-weight: bold;"></li>
+			</ul>
+			<ul class="item-image">
+				<li>
+					<div>
+						<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item0}+'.png'" th:onerror="this.style.display='none';">
+					</div>
+					<div>
+						<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item1}+'.png'" th:onerror="this.style.display='none';">
+					</div>
+					<div>
+						<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item2}+'.png'" th:onerror="this.style.display='none';">
+					</div>
+					<div>
+						<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item6}+'.png'" th:onerror="this.style.display='none';"
+					</div>
+				</li>
+				<li style="padding-right: 35px;">
+					<div>
+						<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item3}+'.png'" th:onerror="this.style.display='none';">
+					</div>
+					<div>
+						<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item4}+'.png'" th:onerror="this.style.display='none';">
+					</div>
+					<div>
+						<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item5}+'.png'" th:onerror="this.style.display='none';">
+					</div>
+				</li>
+				<li class="gold-ward" th:text="'골드 '+${result.goldEarned}"></li>
+				<li class="gold-ward" th:text="'제어와드 '+${result.visionWardsBoughtInGame}"></li>
+			</ul>
+			<input id="matchId" type="hidden" th:value="${result.matchId}">
+			<button class="closeinfo"><</button>
+			<button class="anyinfo">></button>
+			<div id ="more">
+				<div id="more_red">
+					<div class="red-header">
+						<div class="cell" style="width: 300px;">레드팀</div>
+						<div class="cell" style="width: 100px;">KDA</div>
+						<div class="cell" style="width: 100px;">피해량</div>
+						<div class="cell" style="width: 100px;">와드</div>
+						<div class="cell" style="width: 100px;">CS</div>
+						<div class="cell">아이템</div>
+					</div>
+					<ul class="red-container"></ul>
 				</div>
-				<div>
-					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item1}+'.png'" th:onerror="this.style.display='none';">
+				<div id="more_blue">
+					<div class="blue-header">
+						<div class="cell" style="width: 300px;">블루팀</div>
+						<div class="cell" style="width: 100px;">KDA</div>
+						<div class="cell" style="width: 100px;">피해량</div>
+						<div class="cell" style="width: 100px;">와드</div>
+						<div class="cell" style="width: 100px;">CS</div>
+						<div class="cell">아이템</div>
+					</div>
+					<ul class="blue-container"></ul>
 				</div>
-				<div>
-					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item2}+'.png'" th:onerror="this.style.display='none';">
-				</div>
-				<div>
-					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item3}+'.png'" th:onerror="this.style.display='none';">
-				</div>
-				<div>
-					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item4}+'.png'" th:onerror="this.style.display='none';">
-				</div>
-				<div>
-					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item5}+'.png'" th:onerror="this.style.display='none';">
-				</div>
-				<div>
-					<img th:src="'https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/'+${result.item6}+'.png'" th:onerror="this.style.display='none';"
-				</div>
-			</li>
-		</ul>
-		<!--<span th:text="${result}"></span>-->
-	</div>
+			</div>
+				<!--<span th:text="${result}"></span>-->
+		</div>
+	</section >
 	<th:block th:insert="/common/common::footer"></th:block>
 </body>
 </html>

@@ -13,7 +13,7 @@ a{
 	display: flex
 }
 .inline-flex{
-	display: inline-flex;
+	display: inline-flex!important;
 }
 .end{
 	justify-content: flex-end;
@@ -31,14 +31,22 @@ a{
 	width: 1080px;
 	margin: 0 auto;
 }
-
+.cell{
+	display: table-cell;
+	height: 0px;
+}
+.middle{
+	vertical-align: middle;
+}
 /*header*/
 header{
 	background-color: black;
+	border-bottom: 1px solid white;
 }
 .first-header{
 	height: 50px;
 	line-height: 40px;
+	justify-content: space-between;
 }
 
 header .header-banner{
@@ -71,8 +79,6 @@ header .header-login button{
 	border: none;
 	margin-right : 10px;
 	font-size: 12px;
-	position: relative;
-	left: 950px;
 }
 header .header-login .menu ul{
 	margin-top: 3px;
@@ -83,5 +89,37 @@ header .header-login .menu ul li a{
 }
 /*footer*/
 footer{
-	background-color: #5383e8;
+	border-top: 1px solid white;
+	height: 100px;
+	background-color: black;
+	color : white;
+	padding-top: 22px;
+	text-align: center;
+}
+
+/*메인페이지*/
+main form{
+	width: 500px;
+	margin: 0 auto;
+	display: grid;
+	height: 50px;
+	grid-template-columns: 400px 100px;
+}
+main form input{
+	border-top-left-radius: 10px;
+	border-bottom-left-radius: 10px;
+	border-right: none;
+	border: 1px solid white;
+	padding-left: 15px;
+	font-size: 20px;
+}
+main form button{
+	border-top-right-radius: 10px;
+	border-bottom-right-radius: 10px;
+	border-left: none;
+	border: 1px solid white;
+	background-color: white;
+	font-size: 30px;
+	padding-left: 25px;
+	cursor: pointer;
 }

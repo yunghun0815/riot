@@ -7,21 +7,31 @@
 <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
 <script>
 	$(function () {
+		var api_key = "RGAPI-469f9299-cf01-48c6-9f18-7e4b4798f8c3";
 		var runeData =
 				$.ajax({
 					type: "GET",
 					url: "https://ddragon.leagueoflegends.com/cdn/11.24.1/data/en_US/runesReforged.json",
 					data: {},
-					success: function(data){
+					success: function (data) {
 						runeData = data;
 					}
 				});
-		$("#reSearch").click(function(){
+		var puuid = $("#puuid").val();
+		var matchIdList =
+				$.ajax({
+					type: "GET",
+					url: "https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/" + puuid + "/ids" + "?api_key=" + api_key + "&count=100",
+					success: function (data) {
+						matchIdList = data;
+					}
+				});
+		$("#reSearch").click(function () {
 			$("#searchBanner").css("display", "block");
 			$("#reSearch").css("display", "none");
 		});
-		$(".anyinfo").click(function () {
-			var api_key = "RGAPI-469f9299-cf01-48c6-9f18-7e4b4798f8c3";
+
+		$(document).on("click",".anyinfo",function(){
 			var matchId = $(this).prev().prev().val();
 			var red_header = $(this).next().find(".red-header");
 			var blue_header = $(this).next().find(".blue-header");
@@ -41,17 +51,17 @@
 				success: function (data) {
 					var blue_result = data['info']['participants'][0]['win'];
 					var red_result = data['info']['participants'][5]['win'];
-					if(blue_result == true){
+					if (blue_result == true) {
 						blue_result = " (승리)";
 						blue_location.css("background-color", "#d8e4ec");
-					}else{
+					} else {
 						blue_result = " (패배)";
 						blue_location.css("background-color", "#e9e0e0");
 					}
-					if(red_result == true){
+					if (red_result == true) {
 						red_result = " (승리)";
 						red_location.css("background-color", "#d8e4ec");
-					}else{
+					} else {
 						red_result = " (패배)";
 						red_location.css("background-color", "#e9e0e0");
 					}
@@ -71,7 +81,7 @@
 			})
 		});
 
-		$(".closeinfo").click(function () {
+		$(document).on("click",".closeinfo",function(){
 			$(this).next().show();
 			$(this).hide();
 			$(this).next().next().find(".red-container *").remove();
@@ -95,7 +105,7 @@
 			let test = '<li class="part">\
 			<div class="cell inline-flex infocell">\
 				<div class="cell-champion" style="margin-right: 10px;">\
-					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/'+ championName + '.png">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/' + championName + '.png">\
 				</div>\
 				<div class="cell-spell" style="margin-right: 5px;">\
 					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/' + spell1 + '">\
@@ -135,7 +145,7 @@
 			let test = '<li class="part">\
 			<div class="cell inline-flex infocell">\
 				<div class="cell-champion" style="margin-right: 10px;">\
-					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/'+ championName + '.png">\
+					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/' + championName + '.png">\
 				</div>\
 				<div class="cell-spell" style="margin-right: 5px;">\
 					<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/' + spell1 + '">\
@@ -237,6 +247,253 @@
 				}
 			}
 		}
+
+		var name = $("#myName").val();
+		var myGameLocation = $("#nextMatch");
+
+		$("#nextMatch").click(function () {
+			var nextMatchNumber = parseInt($("#nextMatch").val());
+			for (var i = nextMatchNumber; i < nextMatchNumber+10; i++) {
+				$.ajax({
+					type: "GET",
+					url: "https://asia.api.riotgames.com/lol/match/v5/matches/" + matchIdList[i] + "?api_key=" + api_key,
+					data: {},
+					async: false,
+					success: function (data) {
+						for (var j = 0; j < 10; j++) {
+							if (data['info']['participants'][j]['summonerName'] == name) {
+								myGame(data, j, myGameLocation);
+							}
+						}
+					}
+				})
+			}
+			$("#nextMatch").attr('value', parseInt(nextMatchNumber)+10);
+			if($("#nextMatch").val()>=matchIdList.length-11){
+				$("#nextMatch").hide();
+			}
+		});
+
+
+		function queueType(queueId) {
+			var queue = null;
+			switch (queueId) {
+				case 400:
+				case 430:
+					queue = "일반게임";
+					break;
+				case 420:
+					queue = "솔로랭크";
+					break;
+				case 440:
+					queue = "자유랭크";
+					break;
+				case 450:
+					queue = "칼바람나락";
+					break;
+				case 800:
+				case 810:
+				case 820:
+				case 830:
+				case 840:
+				case 850:
+					queue = "봇전";
+					break;
+				case 900:
+					queue = "우르프";
+					break;
+				case 920:
+					queue = "포로왕";
+					break;
+				case 1020:
+					queue = "단일챔피언";
+					break;
+				case 2000:
+				case 2010:
+				case 2020:
+					queue = "튜토리얼";
+					break;
+				default:
+					queue = "이벤트";
+					break;
+			}
+			return queue;
+		}
+		function myGame(data, index, location){
+			var game = data['info'];
+			var matchId = data['metadata']['matchId'];
+			var participants = game['participants'][index]
+			var gameStartTimestamp = timestamp(game['gameStartTimestamp']);
+			var queueId = queueType(game['queueId']);
+			var win = "승리";
+			if(participants['win'] == true){win="승리";}else{win="패배";};
+			var duration = parseInt(game['gameDuration']);
+			if(!game['gameEndTimestamp']){
+				duration = parseInt(game['gameDuration'])/1000;
+			}
+			var min = parseInt(duration)/60;
+			var sec = parseInt(duration)%60;
+			var gameDuration = Math.floor(min) + "분 " + sec + "초";
+			var championName = participants['championName'];
+			var summoner1Id = spell(participants['summoner1Id']);
+			var summoner2Id = spell(participants['summoner2Id']);
+			var mainRuneImg = mainRune(participants['perks']['styles'][0]['style'], participants['perks']['styles'][0]['selections'][0]['perk']);
+			var subRuneImg = subRun(participants['perks']['styles'][1]['style']);
+			var kills = participants['kills'];
+			var deaths = participants['deaths'];
+			var assists = participants['assists'];
+			var aver = kdaaver(kills, deaths, assists);
+			var killAll = 0;
+			if(index<5){
+				for(var i=0; i<5; i++){
+					killAll += game['participants'][i]['kills'];
+				}
+			}else{
+				for(var i=5; i<10; i++){
+					killAll += game['participants'][i]['kills'];
+				}
+			}
+			var killper = Math.round(kills/parseInt(killAll)*100) + "%";
+			var champLevel = participants['champLevel'];
+			var totalMinionsKilled = participants['totalMinionsKilled'];
+			var neutralMinionsKilled = participants['neutralMinionsKilled'];
+			var minions = totalMinionsKilled+neutralMinionsKilled;
+			var csAver = (totalMinionsKilled + neutralMinionsKilled)/min;
+			var mincs = "("+ Math.round(csAver*100)/100.0 + ")";
+			var item;
+			var goldEarned = participants['goldEarned'];
+			var visionWardsBoughtInGame = participants['visionWardsBoughtInGame'];
+			var backgroundColor = "#22c4d560";
+			var color = "#1a78ae";
+			if(win == "승리"){
+				backgroundColor = "#22c4d560";
+				color = "#1a78ae"
+			}else{
+				backgroundColor = "#e5133c40";
+				color = "#c6443e"
+			}
+			let html = '<div id="myGameData" style="background-color : '+backgroundColor+';">\n' +
+					'\t\t\t<ul class="gameType"> <!--게임타입-->\n' +
+					'\t\t\t\t<li style="font-weight: bold;">'+queueId+'</li>\n' +
+					'\t\t\t\t<li style="color:#555; margin-bottom: 5px;">'+gameStartTimestamp+'</li>\n' +
+					'\t\t\t\t<li style="color: '+color+';">'+win+'</li>\n' +
+					'\t\t\t\t<li style="color:#555;">'+gameDuration+'</li>\n' +
+					'\t\t\t</ul>\n' +
+					'\t\t\t<ul class="inline-flex imageInfo">\n' +
+					'\t\t\t\t<li class="champion">\n' +
+					'\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/champion/'+ championName +'.png">\n' +
+					'\t\t\t\t</li>\n' +
+					'\t\t\t\t<li class="spell">\n' +
+					'\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/' + summoner1Id + '">\n' +
+					'\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/spell/' + summoner2Id + '">\n' +
+					'\t\t\t\t</li>\n' +
+					'\t\t\t\t<li class="rune">\n' +
+					'\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/img/' + mainRuneImg + '" style="background-color: black; border-radius: 20px;">\n' +
+					'\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/img/' + subRuneImg + '">\n' +
+					'\t\t\t\t</li>\n' +
+					'\t\t\t</ul>\n' +
+					'\t\t\t<ul class="kda">\n' +
+					'\t\t\t\t<li>\n' +
+					'\t\t\t\t\t<span style="font-weight: 700;">'+kills+'</span>\n' +
+					'\t\t\t\t\t<span> / </span>\n' +
+					'\t\t\t\t\t<span style="color: #c6443e; font-weight: 700;">'+deaths+'</span>\n' +
+					'\t\t\t\t\t<span> / </span>\n' +
+					'\t\t\t\t\t<span style="font-weight: 700;">'+assists+'</span><br>\n' +
+					'\t\t\t\t\t<span class="aver">평점 '+aver+'</span>\n' +
+					'\t\t\t\t</li>\n' +
+					'\t\t\t</ul>\n' +
+					'\t\t\t<ul style="color:#555e5e; font-size: 18px;">\n' +
+					'\t\t\t\t<li style="margin-bottom: 7px;">레벨'+champLevel+'</li>\n' +
+					'\t\t\t\t<li style="margin-bottom: 7px;">\n' +
+					'\t\t\t\t\t<span>'+minions+'</span>\n' +
+					'\t\t\t\t\t<span>'+mincs+'</span>\n' +
+					'\t\t\t\t\t<span>CS</span>\n' +
+					'\t\t\t\t</li>\n' +
+					'\t\t\t\t<li style="color: #c6443e; font-weight: bold;">킬관여 '+killper+'</li>\n' +
+					'\t\t\t</ul>\n' +
+					'\t\t\t<ul class="item-image">\n' +
+					'\t\t\t\t<li>\n' +
+					'\t\t\t\t\t<div>\n' +
+					'\t\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + participants['item0'] + '.png" onerror="this.style.display=\'none\';">\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t\t<div>\n' +
+					'\t\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + participants['item1'] + '.png" onerror="this.style.display=\'none\';">\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t\t<div>\n' +
+					'\t\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + participants['item2'] + '.png" onerror="this.style.display=\'none\';">\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t\t<div>\n' +
+					'\t\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + participants['item6'] + '.png" onerror="this.style.display=\'none\';">\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t</li>\n' +
+					'\t\t\t\t<li style="padding-right: 35px;">\n' +
+					'\t\t\t\t\t<div>\n' +
+					'\t\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + participants['item3'] + '.png" onerror="this.style.display=\'none\';">\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t\t<div>\n' +
+					'\t\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + participants['item4'] + '.png" onerror="this.style.display=\'none\';">\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t\t<div>\n' +
+					'\t\t\t\t\t\t<img src="https://ddragon.leagueoflegends.com/cdn/11.24.1/img/item/' + participants['item5'] + '.png" onerror="this.style.display=\'none\';">\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t</li>\n' +
+					'\t\t\t\t<li class="gold-ward">골드 '+goldEarned+'</li>\n' +
+					'\t\t\t\t<li class="gold-ward">제어와드 '+visionWardsBoughtInGame+'</li>\n' +
+					'\t\t\t</ul>\n' +
+					'\t\t\t<input id="matchId" type="hidden" value="'+matchId+'">\n' +
+					'\t\t\t<button class="closeinfo"><</button>\n' +
+					'\t\t\t<button class="anyinfo">></button>\n' +
+					'\t\t\t<div id ="more">\n' +
+					'\t\t\t\t<div id="more_red">\n' +
+					'\t\t\t\t\t<div class="red-header">\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 300px;">레드팀</div>\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 100px;">KDA</div>\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 100px;">피해량</div>\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 100px;">와드</div>\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 100px;">CS</div>\n' +
+					'\t\t\t\t\t\t<div class="cell">아이템</div>\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t\t<ul class="red-container"></ul>\n' +
+					'\t\t\t\t</div>\n' +
+					'\t\t\t\t<div id="more_blue">\n' +
+					'\t\t\t\t\t<div class="blue-header">\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 300px;">블루팀</div>\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 100px;">KDA</div>\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 100px;">피해량</div>\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 100px;">와드</div>\n' +
+					'\t\t\t\t\t\t<div class="cell" style="width: 100px;">CS</div>\n' +
+					'\t\t\t\t\t\t<div class="cell">아이템</div>\n' +
+					'\t\t\t\t\t</div>\n' +
+					'\t\t\t\t\t<ul class="blue-container"></ul>\n' +
+					'\t\t\t\t</div>\n' +
+					'\t\t\t</div>\n' +
+					'\t\t</div>';
+			location.before(html);
+		}
+		function timestamp(timestamp){
+			var date_not_formatted = new Date(timestamp);
+			var formatted_string = "";
+			if (date_not_formatted.getMonth() < 9) {
+				formatted_string += "0";
+			}
+			formatted_string += (date_not_formatted.getMonth() + 1);
+			formatted_string += "-";
+			if(date_not_formatted.getDate() < 10) {
+				formatted_string += "0";
+			}
+			formatted_string += date_not_formatted.getDate();
+			return formatted_string;
+		}
+		function kdaaver(k, d, a){
+			var result=null;
+			if(d==0){
+				result = "Perfect";
+			}else {
+				var aver = (k + a) / d;
+				result = Math.round(aver*100)/100.0;
+			}
+			return result;
+		}
 	});
 </script>
 <body>
@@ -263,6 +520,7 @@
 				<span th:text="'Lv.'+${summonerLevel}" style="font-size: 20px;"></span><br>
 				<span th:text ="${name}" style="font-weight: 900; font-size: 30px"></span>
 			</div>
+			<input id="myName" type="hidden" th:value="${name}">
 		</div>
 		<!-- 티어, 점수, 승률 -->
 		<div>
@@ -314,7 +572,7 @@
 	</section>
 	<!-- 게임결과 -->
 	<section class="gameDetail" th:if="${check} == 'true'">
-		<div th:each="result : ${result}"  th:style="${result.win == true ? 'background-color : #22c4d560' : 'background-color : #e5133c40'}">
+		<div id="myGameData" th:each="result : ${result}"  th:style="${result.win == true ? 'background-color : #22c4d560' : 'background-color : #e5133c40'}">
 			<ul class="gameType"> <!--게임타입-->
 				<li th:text="${result.queueId}" style="font-weight: bold;"></li>
 				<li th:text="${result.getEndTimestamp}" style="color:#555; margin-bottom: 5px;"></li>
@@ -410,8 +668,9 @@
 					<ul class="blue-container"></ul>
 				</div>
 			</div>
-				<!--<span th:text="${result}"></span>-->
 		</div>
+		<button id="nextMatch" value = "10">더 보기</button>
+		<input id="puuid" type="hidden" th:value="${puuid}">
 	</section >
 	<th:block th:insert="/common/common::footer"></th:block>
 </body>

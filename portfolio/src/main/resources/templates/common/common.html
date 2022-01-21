@@ -2,7 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head th:fragment="head">
 <meta charset="UTF-8">
-<title>header</title>
+<title>yh.gg</title>
 	<link rel="stylesheet" type="text/css" href="/css/common/common.css">
 	<link rel="stylesheet" type="text/css" href="/css/common/search.css">
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -18,12 +18,12 @@
 			</div>
 			<div class="header-login">
 				<div class="flex menu">
-					<ul class="flex">
+					<!--<ul class="flex">
 
 						<li>
-							<a href="#">커뮤니티</a>
+							<a href="/board">커뮤니티</a>
 						</li>
-					</ul>
+					</ul>-->
 					<button onclick="location.href='/sign/login'" sec:authorize="isAnonymous()">로그인</button>
 					<button onclick="location.href='/logout'" sec:authorize="isAuthenticated()">로그아웃</button>
 				</div>

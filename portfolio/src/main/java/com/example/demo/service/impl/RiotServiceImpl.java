@@ -66,6 +66,7 @@ public class RiotServiceImpl implements RiotService {
 				long profileIconId = (long) object.get("profileIconId");
 				long summonerLevel = (long) object.get("summonerLevel");
 				summonerName = (String) object.get("name");
+				model.addAttribute("puuid", puuid);
 				model.addAttribute("check", check);
 				model.addAttribute("name", summonerName);
 				model.addAttribute("profileIconId", profileIconId);
@@ -109,13 +110,19 @@ public class RiotServiceImpl implements RiotService {
 				List<Map<String, Object>> list = new ArrayList<>();
 				list = objectMapper.readValue(object.toString(), new TypeReference<List<Map<String, Object>>>() {
 				});
-				switch (object.size()) {
+				int o = object.size();
+				int b = 0;
+				if(o==2 && list.get(0).get("queueType").equals("RANKED_TFT_PAIRS")){
+					o--;
+					b=1;
+				}
+				switch (o) {
 					case 0:
 						model.addAttribute("code", "0");
 						model.addAttribute("result", "등록되지 않은 소환사입니다. 오타를 확인 후 다시 검색해주세요.");
 						break;
 					case 1:
-						map = list.get(0);
+						map = list.get(b);
 						if (map.get("queueType").equals("RANKED_FLEX_SR")) {
 							model.addAttribute("code", "free");
 							model.addAttribute("tier_free", (String) map.get("tier"));
@@ -138,7 +145,7 @@ public class RiotServiceImpl implements RiotService {
 							model.addAttribute("percent_solo", percent);
 						}
 						break;
-					case 2:
+					case 2: case 3:
 						model.addAttribute("code", "2");
 						for (int i = 0; i < 2; i++) {
 							if (list.get(i).get("queueType").toString().equals("RANKED_FLEX_SR")) {
@@ -176,7 +183,7 @@ public class RiotServiceImpl implements RiotService {
 			try {
 				StringBuilder urlBuilder = new StringBuilder(
 						"https://asia.api.riotgames.com/lol/match/v5/matches/by-puuid/" + URLEncoder.encode(puuid, "UTF-8") + "/ids"
-								+ "?api_key=" + api_key + "&count=" + "20");
+								+ "?api_key=" + api_key + "&count=" + "100");
 				URL url = new URL(urlBuilder.toString());
 				HttpURLConnection con = (HttpURLConnection) url.openConnection();
 				con.setRequestMethod("GET");
@@ -198,10 +205,8 @@ public class RiotServiceImpl implements RiotService {
 			} catch (Exception e) {
 				System.out.println(e);
 			}
-			//	List(게임수) Map(블루/퍼플) List Map ?
-			List<Map<String, Object>> matchList = new ArrayList<>();  // 총 20개의 게임 데이터 저장
+			List<Map<String, Object>> matchList = new ArrayList<>();  // 총 10개의 게임 데이터 저장
 			for (int i = 0; i < 10; i++) {
-				System.out.println(matchId[i]);
 				Map<String, Object> teamMap = new HashMap<>(); //레드, 블루로 나눔
 				List<LinkedHashMap<String, Object>> redList = new ArrayList<>(); //레드팀
 				List<LinkedHashMap<String, Object>> blueList = new ArrayList<>(); //블루팀
@@ -245,6 +250,15 @@ public class RiotServiceImpl implements RiotService {
 					QueueType queue = new QueueType();
 					long killPercent = 0;
 					long myKillAssi = 0;
+					long realDuration = (long) map.get("gameDuration")/1000;
+
+					try {
+						if((long)map.get("gameEndTimestamp")>0){
+							realDuration = (long) map.get("gameDuration");
+						}
+					}catch (Exception e){
+						realDuration = (long) map.get("gameDuration")/1000;
+					}
 					for (int j = 0; j < 10; j++) {
 						String playerName = (String) participants.get(j).get("summonerName");
 						//					if(playerName.replaceAll(" ","").equals(name)){
@@ -277,7 +291,8 @@ public class RiotServiceImpl implements RiotService {
 							playerData.put("wardsKilled", participants.get(j).get("wardsKilled"));
 							playerData.put("totalMinionsKilled", participants.get(j).get("totalMinionsKilled"));
 							playerData.put("neutralMinionsKilled", participants.get(j).get("neutralMinionsKilled"));
-							playerData.put("mincs", aver.cs((long) participants.get(j).get("totalMinionsKilled"), (long) participants.get(j).get("neutralMinionsKilled"), (long) map.get("gameDuration") / 60));
+
+							playerData.put("mincs", aver.cs((long) participants.get(j).get("totalMinionsKilled"), (long) participants.get(j).get("neutralMinionsKilled"), realDuration / 60));
 							playerData.put("champLevel", participants.get(j).get("champLevel"));
 							playerData.put("item0", participants.get(j).get("item0"));
 							playerData.put("item1", participants.get(j).get("item1"));
@@ -302,13 +317,12 @@ public class RiotServiceImpl implements RiotService {
 							//	blueGame.add(blue);
 							//	playerData.put("blue", blueGame);
 						} else {
-							System.out.println("이름 에러");
 						}
 					}
 					playerData.put("killPercent", aver.killPer(killPercent, myKillAssi));
 					playerData.put("getEndTimestamp", time.timeStamp((long) map.get("gameStartTimestamp")));
 					playerData.put("queueId", queue.queue((long) map.get("queueId")));
-					playerData.put("gameDuration", duration.duration((long) map.get("gameDuration")));
+					playerData.put("gameDuration", duration.duration(realDuration));
 
 					matchList.add(playerData);
 					//		matchList.put("red", redPlayerData);

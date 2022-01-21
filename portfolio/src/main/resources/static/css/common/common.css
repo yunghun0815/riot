@@ -1,7 +1,9 @@
 @charset "UTF-8";
 /* 전체 */
 *{margin: 0; padding: 0; box-sizing: border-box;}
-
+html{
+	width: 1140px;
+}
 li{
 	list-style: none;
 }

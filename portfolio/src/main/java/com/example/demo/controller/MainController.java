@@ -22,4 +22,9 @@ public class MainController {
 		//로그인페이지로 이동
 		return "/sign/login";
 	}
+
+	@GetMapping("/board")
+	public String board(){
+		return "/board/board";
+	}
 }

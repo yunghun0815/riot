@@ -1,0 +1,227 @@
+/* 소환사 정보*/
+.summonerInfo{
+    margin: 100px auto;
+    width: 1100px;
+    background-color: whitesmoke;
+    padding: 20px;
+    border: 1px solid lightgray;
+    border-radius: 8px;
+}
+.summonerInfo>div{
+    display: inline-block;
+}
+.summonerInfo>div>div{
+    display: inline-block;
+}
+.summonerInfo div ul li img{
+    height: 120px;
+    margin-right: 10px;
+}
+.summonerInfo div ul{
+    margin-left: 20px;
+}
+.summonerInfo div ul li{
+    text-align: center;
+}
+.summonerInfo div ul li .type{
+    font-size: 14px;
+    color: lightslategray;
+}
+.summonerInfo div ul li .tier{
+    color: dodgerblue;
+    font-weight: bold;
+}
+.summonerInfo div ul li .point{
+    font-weight: bold;
+}
+.summonerInfo div ul .rankDetail{
+    padding-top: 23px;
+    margin-right: 20px;
+}
+/*게임정보*/
+.gameDetail{
+    width: 1100px;
+    margin: 50px auto;
+    background-color: whitesmoke;
+    padding: 20px;
+    border: 1px solid lightgray;
+    border-radius: 8px;
+}
+.gameDetail>div{
+    margin: 30px auto;
+    width: 1000px;
+    height: 155px;
+    border: 2px solid gray;
+    border-radius: 5px;
+    padding-top: 5px;
+}
+.gameDetail>div>ul{
+    display: inline-block;
+}
+.gameDetail .imageInfo{
+    align-items: center;
+}
+.gameDetail .champion img{
+    height: 70px;
+    border-radius: 30px;
+}
+.gameDetail .spell img{
+    height: 40px;
+}
+.gameDetail .rune{
+    margin-left: -30px;
+}
+.gameDetail .rune img{
+    height: 40px;
+}
+.gameDetail>div>ul{
+    width: 190px;
+    text-align: center;
+}
+.gameDetail .gameType{
+    width: 100px;
+    text-align: center;
+    margin-right: 20px;
+}
+.gameDetail .kda{
+    position: relative;
+    bottom: 10px;
+}
+.gameDetail .kda li{
+    font-size: 25px;
+    color:#555e5e;
+}
+.gameDetail .kda .aver{
+    font-size: 20px;
+    font-weight: bold;
+    color: #222;
+}
+.item-image{
+    width: 190px !important;
+    position: relative;
+    top: 19px;
+    margin-left: 40px;
+}
+.item-image li{
+    text-align: left;
+}
+.item-image li div{
+    width: 30px;
+    height: 30px;
+    background-color: #333333;
+    display: inline-block;
+}
+.item-image li div img{
+    width: 30px;
+    height: 30px;
+}
+.item-image .gold-ward{
+    font-size: 18px;
+    font-weight: bold;
+    color: #555;
+}
+.anyinfo{
+    border: none;
+    transform: rotate(
+            90deg);
+    font-size: 30px;
+    background: none;
+    position: relative;
+    left: 2%;
+    top: 17%;
+    cursor: pointer;
+    color: dimgray;
+}
+.closeinfo{
+    display: none;
+    border: none;
+    transform: rotate(
+            90deg);
+    font-size: 30px;
+    background: none;
+    position: relative;
+    left: 2%;
+    top: 17%;
+    cursor: pointer;
+    color: dimgray;
+}
+#more{
+    display: none;
+    position: relative;
+    top: 28px;
+}
+
+#more_blue,
+#more_red{
+    display: table;
+    width: 100%;
+    border: 1px solid #555;
+    border-top: none;
+}
+
+.red-header, .blue-header{
+    display: table-header-group;
+    background-color: white;
+    height: 40px;
+    line-height: 40px;
+}
+.red-container, .blue-container{
+    display: table-row-group;
+}
+.cell{
+    text-align: center;
+    align-items: center;
+    vertical-align: middle;
+}
+.part{
+    display: table-row;
+    height: 50px;
+}
+.cell-item{
+    background-color: #333333;
+    width: 30px;
+    height: 30px;
+    display: inline-block;
+}
+.infocell{
+    position: relative;
+    top: 28px;
+    left: 20px;
+    vertical-align: baseline;
+}
+.cell-item img{
+    height: 30px;
+    width: 30px;
+}
+.cell-champion img{
+    height: 40px;
+    border-radius: 30px;
+}
+.cell-spell img{
+    height: 20px;
+}
+.cell-spell img:first-child{
+    display: block;
+}
+.cell-rune img{
+    height: 20px;
+}
+.cell-rune img:first-child{
+    background-color: black;
+    border-radius: 20px;
+    display: block;
+}
+#nextMatch{
+    display: block;
+    margin: 0 auto;
+    width: 200px;
+    height: 50px;
+    cursor: pointer;
+}
+/*error page*/
+.check-false{
+    margin: 300px auto;
+    text-align: center;
+    font-weight: bold;
+    font-size: 25px;
+}

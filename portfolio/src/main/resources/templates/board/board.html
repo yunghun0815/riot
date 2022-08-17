@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:insert="/common/common::head">
+    <meta charset="UTF-8">
+    <title>커뮤니티</title>
+</head>
+<style>
+    table{
+        margin: 200px auto;
+        background-color: whitesmoke;
+    }
+    table tr td{
+        overflow: hidden;
+        text-align: center;
+        border: 1px solid black;
+    }
+    .indexNum{
+        width: 50px;
+    }
+    .title{
+        width: 200px;
+    }
+    .writer{
+        width: 100px;
+    }
+    .createdDate{
+        width: 100px;
+    }
+</style>
+<th:block th:insert="/common/common::header"></th:block>
+<body>
+    <table>
+        <thead>
+            <tr>
+                <td class="indexNum">no</td>
+                <td class="title">제목</td>
+                <td class="writer">작성자</td>
+                <td class="createdDate">작성일</td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="indexNum">1</td>
+                <td class="title">안녕하세요 제목.</td>
+                <td class="writer">정영훈</td>
+                <td class="createdDate">2022-01-11</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+<th:block th:insert="/common/common::footer"></th:block>
+</html>
